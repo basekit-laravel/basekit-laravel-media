@@ -1,0 +1,91 @@
+{
+  "name": "basekit-laravel/basekit-laravel-media",
+  "description": "Media library for Basekit Laravel — metadata for files stored on a Laravel filesystem disk, a folder hierarchy, a Filament administrator to upload and organise media, and a picker field any other package can embed to let editors choose an existing file.",
+  "keywords": [
+    "laravel",
+    "basekit",
+    "media",
+    "files",
+    "images",
+    "uploads",
+    "filament"
+  ],
+  "homepage": "https://github.com/gergo-tar/basekit-laravel-media",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Gergő Tar",
+      "email": "dev@gergotar.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.4|^8.5",
+    "illuminate/contracts": "^13",
+    "illuminate/database": "^13",
+    "illuminate/filesystem": "^13",
+    "illuminate/support": "^13"
+  },
+  "require-dev": {
+    "filament/filament": "^5.8",
+    "larastan/larastan": "^3.8",
+    "laravel/pint": "^1.17",
+    "mockery/mockery": "^1.6",
+    "nunomaduro/collision": "^8.9",
+    "orchestra/testbench": "11.*",
+    "pestphp/pest": "^5.0",
+    "pestphp/pest-plugin-laravel": "^5.0",
+    "pestphp/pest-plugin-livewire": "^5.0",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan-deprecation-rules": "^2.0",
+    "rector/rector": "^2.6"
+  },
+  "suggest": {
+    "filament/filament": "Required to use the admin resources and the picker field."
+  },
+  "autoload": {
+    "psr-4": {
+      "BasekitLaravel\\BasekitLaravelMedia\\": "src/",
+      "BasekitLaravel\\BasekitLaravelMedia\\Database\\Factories\\": "database/factories/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "BasekitLaravel\\BasekitLaravelMedia\\Tests\\": "tests/"
+    },
+    "files": [
+      "tests/TestSupport/helpers.php"
+    ]
+  },
+  "scripts": {
+    "test": "vendor/bin/pest",
+    "test-coverage": "vendor/bin/pest --coverage",
+    "format": "vendor/bin/pint",
+    "refactor": "vendor/bin/rector process",
+    "refactor-dry": "vendor/bin/rector process --dry-run",
+    "analyse": "vendor/bin/phpstan analyse",
+    "lint": "vendor/bin/pint --test",
+    "post-autoload-dump": [
+      "@clear",
+      "@prepare"
+    ],
+    "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+    "prepare": "@php vendor/bin/testbench package:discover --ansi"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true,
+      "phpstan/extension-installer": true
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "BasekitLaravel\\BasekitLaravelMedia\\BasekitLaravelMediaServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

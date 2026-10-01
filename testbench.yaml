@@ -1,0 +1,6 @@
+providers:
+  - BasekitLaravel\BasekitLaravelMedia\BasekitLaravelMediaServiceProvider
+
+env:
+  - APP_KEY="base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  - DB_CONNECTION=sqlite
