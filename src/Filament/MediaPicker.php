@@ -48,7 +48,7 @@ class MediaPicker extends ModalTableSelect
             })
             ->dehydrateStateUsing(fn (mixed $state): mixed => self::resolveStoredValue($state))
             ->registerActions([$this->uploadAction()])
-            ->selectAction(fn (Action $action, MediaPicker $component): Action => $action->modalFooterActions(
+            ->selectAction(fn (Action $action, MediaPicker $component): Action => $action->extraModalFooterActions(
                 fn (): array => [$component->getAction('upload')],
             ));
     }
