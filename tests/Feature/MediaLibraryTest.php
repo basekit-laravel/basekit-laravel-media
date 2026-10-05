@@ -70,16 +70,16 @@ it('keeps the stored file when only the folder changes', function (): void {
         ->and($disk->exists('media/photo.jpg'))->toBeTrue();
 });
 
-it('deletes the stored file when a media item is deleted', function (): void {
+it('takes a deleted file off the disk when the deletion is made final', function (): void {
     $disk = Storage::disk('testing');
     $disk->put('media/photo.jpg', 'photo');
 
     $media = makeMedia(['path' => 'media/photo.jpg']);
 
-    $media->delete();
+    $media->forceDelete();
 
     expect($disk->exists('media/photo.jpg'))->toBeFalse()
-        ->and(Media::query()->count())->toBe(0);
+        ->and(Media::withTrashed()->find($media->getKey()))->toBeNull();
 });
 
 it('fills metadata for a file put on the disk outside the uploader', function (): void {

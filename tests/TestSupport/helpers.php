@@ -2,14 +2,50 @@
 
 declare(strict_types=1);
 
+use BasekitLaravel\BasekitLaravelMedia\Filament\Pages\MediaLibrary;
 use BasekitLaravel\BasekitLaravelMedia\Models\Media;
 use BasekitLaravel\BasekitLaravelMedia\Models\MediaFolder;
+use BasekitLaravel\BasekitLaravelMedia\Tests\TestSupport\Livewire\MediaPickerForm;
 use BasekitLaravel\BasekitLaravelMedia\Tests\TestSupport\Models\User;
 use Filament\Actions\Action;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportTesting\Testable;
+use Livewire\Livewire;
+
+if (! function_exists('mediaPage')) {
+    /**
+     * The media library page, mounted and ready to be asked questions.
+     *
+     * The helper is here so the tests reach the page's own actions with the page
+     * typed, rather than through the untyped facade handle.
+     *
+     * @param  array<string, mixed>  $params
+     * @return Testable<MediaLibrary>
+     */
+    function mediaPage(array $params = []): Testable
+    {
+        return Livewire::test(MediaLibrary::class, $params);
+    }
+}
+
+if (! function_exists('pickerForm')) {
+    /**
+     * A form carrying nothing but the media picker, mounted and ready.
+     *
+     * The picker offers its upload as a form action, so the tests reach it
+     * through the form it sits in rather than through a field built on its own,
+     * which has nowhere to hang the action.
+     *
+     * @param  array<string, mixed>  $params
+     * @return Testable<MediaPickerForm>
+     */
+    function pickerForm(array $params = []): Testable
+    {
+        return Livewire::test(MediaPickerForm::class, $params);
+    }
+}
 
 if (! function_exists('makeMedia')) {
     /**
@@ -83,9 +119,9 @@ if (! function_exists('mountedAction')) {
      * rather than being part of the page markup, so asserting on what the modal
      * says means asking the mounted action itself.
      *
-     * @param  Testable  $component
+     * @param  Testable<MediaLibrary>  $component
      */
-    function mountedAction(mixed $component): Action
+    function mountedAction(Testable $component): Action
     {
         $mounted = $component->instance()->getMountedActions();
 
@@ -105,10 +141,10 @@ if (! function_exists('actionModalContent')) {
      * of the page markup, so what a modal says about a file is asked of the action
      * itself, with the arguments the tile would have passed it.
      *
-     * @param  Testable  $component
+     * @param  Testable<MediaLibrary>  $component
      * @param  array<string, mixed>  $arguments
      */
-    function actionModalContent(mixed $component, string $action, array $arguments = []): string
+    function actionModalContent(Testable $component, string $action, array $arguments = []): string
     {
         $instance = $component->instance();
 
@@ -138,17 +174,17 @@ if (! function_exists('breadcrumbs')) {
     function breadcrumbs(string $html): array
     {
         preg_match('/<nav[^>]*fi-breadcrumbs[^>]*>(.*?)<\/nav>/s', $html, $trail);
-        $trail = $trail[1] ?? '';
+        $inner = $trail[1];
 
-        preg_match_all('/class="fi-breadcrumbs-item-label"[^>]*>([^<]*)/', $trail, $labels);
-        preg_match_all('/href="([^"]*)"/', $trail, $links);
+        preg_match_all('/class="fi-breadcrumbs-item-label"[^>]*>([^<]*)/', $inner, $labels);
+        preg_match_all('/href="([^"]*)"/', $inner, $links);
 
         return [
             'labels' => array_map(
                 static fn (string $label): string => trim(strip_tags($label)),
-                $labels[1] ?? [],
+                $labels[1],
             ),
-            'links' => $links[1] ?? [],
+            'links' => $links[1],
         ];
     }
 }
@@ -177,7 +213,8 @@ if (! function_exists('breadcrumbLinks')) {
     }
 }
 
-if (! function_exists('makeUser')) {    /**
+if (! function_exists('makeUser')) {
+    /**
      * A user that can enter the panel.
      *
      * Filament asks the guard's user model for `canAccessPanel()` and refuses

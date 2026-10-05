@@ -35,5 +35,9 @@ final class BasekitLaravelMediaServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../lang' => $this->app->langPath('vendor/basekit-laravel-media'),
         ], 'basekit-laravel-media-translations');
+
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/basekit-laravel-media'),
+        ], 'basekit-laravel-media-views');
     }
 }

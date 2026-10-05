@@ -22,6 +22,8 @@ return [
     'empty_folder' => 'This folder is empty',
     'empty_help' => 'Upload a file to add one.',
 
+    'duplicate_path' => 'A file is already stored at :path.',
+
     'upload' => 'Upload new',
     'upload_to' => 'Upload to :folder',
     'upload_success' => 'Uploaded.',
@@ -37,7 +39,8 @@ return [
     'moved' => 'Moved.',
     'delete' => 'Delete',
     'delete_file' => 'Delete :file?',
-    'delete_file_help' => 'The file is removed from the library and from the disk. Nothing that refers to it will keep working.',
+    'delete_file_help' => 'The file leaves the library but stays on the disk, so it can be put back. Anything that refers to it will break in the meantime.',
+    'delete_file_help_permanently' => 'The file is removed from the library and from the disk. Nothing that refers to it will keep working, and it cannot be put back.',
     'delete_folder' => 'Delete folder',
     'delete_folder_named' => 'Delete :folder?',
     'delete_folder_help' => 'The folder and its subfolders are deleted. The files inside stay in the library and lose the folder.',

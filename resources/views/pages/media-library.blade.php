@@ -427,7 +427,9 @@
                         <span class="bkm-folder-count">{{ $folder->media_count }}</span>
 
                         <span class="bkm-folder-actions">
-                            {{ ($this->deleteFolderAction)(['id' => $folder->getKey()])->iconButton()->size('xs') }}
+                            @if ($abilities['delete'])
+                                {{ ($this->deleteFolderAction)(['id' => $folder->getKey()])->iconButton()->size('xs') }}
+                            @endif
                         </span>
                     </div>
                 @endforeach
@@ -458,12 +460,14 @@
                     />
                 </x-filament::input.wrapper>
 
-                <x-filament::callout
-                    class="bkm-hint"
-                    color="gray"
-                    icon="heroicon-o-arrow-right-start-on-rectangle"
-                    :description="__('basekit-laravel-media::basekit-laravel-media.drag_hint')"
-                />
+                @if ($abilities['update'])
+                    <x-filament::callout
+                        class="bkm-hint"
+                        color="gray"
+                        icon="heroicon-o-arrow-right-start-on-rectangle"
+                        :description="__('basekit-laravel-media::basekit-laravel-media.drag_hint')"
+                    />
+                @endif
 
                 @if ($childFolders->isEmpty() && $media->isEmpty())
                     <x-filament::empty-state
@@ -500,7 +504,9 @@
                                 </button>
 
                                 <span class="bkm-folder-tile-actions">
-                                    {{ ($this->deleteFolderAction)(['id' => $folder->getKey()])->iconButton()->size('xs') }}
+                                    @if ($abilities['delete'])
+                                        {{ ($this->deleteFolderAction)(['id' => $folder->getKey()])->iconButton()->size('xs') }}
+                                    @endif
                                 </span>
                             </div>
                         @endforeach
@@ -509,31 +515,36 @@
                             <div
                                 wire:key="media-{{ $item->id }}"
                                 class="bkm-tile"
-                                draggable="true"
+                                draggable="{{ $abilities['update'] ? 'true' : 'false' }}"
                                 x-on:pointerdown="justDragged = false"
                                 x-on:dragstart="dragged = {{ $item->id }}; justDragged = true; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', {{ $item->id }})"
                                 x-on:dragend="dragged = null; over = null"
                             >
-                                <button
-                                    type="button"
-                                    class="bkm-tile-preview"
-                                    x-on:click="if (! justDragged) $wire.mountAction('edit', { id: {{ $item->id }} })"
-                                    aria-label="{{ __('basekit-laravel-media::basekit-laravel-media.preview') }}: {{ $item->name }}"
-                                >
-                                    <img
-                                        class="bkm-tile-image"
-                                        src="{{ $item->storageUrl() }}"
-                                        alt="{{ $item->alt ?? $item->name }}"
-                                        loading="lazy"
-                                    />
-                                </button>
+                                @if ($abilities['update'])
+                                    <button
+                                        type="button"
+                                        class="bkm-tile-preview"
+                                        x-on:click="if (! justDragged) $wire.mountAction('edit', { id: {{ $item->id }} })"
+                                        aria-label="{{ __('basekit-laravel-media::basekit-laravel-media.preview') }}: {{ $item->name }}"
+                                    >
+                                        @include('basekit-laravel-media::media.tile-image', ['item' => $item])
+                                    </button>
+                                @else
+                                    <div class="bkm-tile-preview">
+                                        @include('basekit-laravel-media::media.tile-image', ['item' => $item])
+                                    </div>
+                                @endif
 
                                 <div class="bkm-tile-actions">
-                                    {{ ($this->editAction)(['id' => $item->id])->iconButton()->size('xs') }}
+                                    @if ($abilities['update'])
+                                        {{ ($this->editAction)(['id' => $item->id])->iconButton()->size('xs') }}
 
-                                    {{ ($this->moveAction)(['id' => $item->id])->iconButton()->size('xs') }}
+                                        {{ ($this->moveAction)(['id' => $item->id])->iconButton()->size('xs') }}
+                                    @endif
 
-                                    {{ ($this->deleteAction)(['id' => $item->id])->iconButton()->size('xs') }}
+                                    @if ($abilities['delete'])
+                                        {{ ($this->deleteAction)(['id' => $item->id])->iconButton()->size('xs') }}
+                                    @endif
                                 </div>
 
                                 <div class="bkm-tile-caption">

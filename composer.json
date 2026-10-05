@@ -10,7 +10,7 @@
     "uploads",
     "filament"
   ],
-  "homepage": "https://github.com/gergo-tar/basekit-laravel-media",
+  "homepage": "https://github.com/basekit-laravel/basekit-laravel-media",
   "license": "MIT",
   "authors": [
     {
@@ -59,18 +59,33 @@
   },
   "scripts": {
     "test": "vendor/bin/pest",
-    "test-coverage": "vendor/bin/pest --coverage",
+    "test-coverage": "vendor/bin/pest --coverage --coverage-html=build/coverage",
     "format": "vendor/bin/pint",
     "refactor": "vendor/bin/rector process",
     "refactor-dry": "vendor/bin/rector process --dry-run",
     "analyse": "vendor/bin/phpstan analyse",
     "lint": "vendor/bin/pint --test",
+    "check": [
+      "@lint",
+      "@analyse",
+      "@test"
+    ],
     "post-autoload-dump": [
       "@clear",
       "@prepare"
     ],
     "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
     "prepare": "@php vendor/bin/testbench package:discover --ansi"
+  },
+  "scripts-descriptions": {
+    "test": "Run the Pest suite",
+    "test-coverage": "Run the Pest suite and write an HTML report to build/coverage",
+    "format": "Apply Laravel Pint",
+    "refactor": "Apply Rector",
+    "refactor-dry": "Report what Rector would change, without changing it",
+    "analyse": "Run PHPStan with Larastan",
+    "lint": "Check formatting with Laravel Pint",
+    "check": "Run lint, analyse and test together"
   },
   "config": {
     "sort-packages": true,
@@ -86,6 +101,6 @@
       ]
     }
   },
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "prefer-stable": true
 }

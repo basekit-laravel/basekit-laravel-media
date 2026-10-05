@@ -8,10 +8,9 @@ use BasekitLaravel\BasekitLaravelMedia\Models\Media;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Persists a media upload the way the admin submits it: the file is already
- * on its disk by the time the form is saved, so these helpers only fill in the
- * storage metadata the model needs and keep the storage file in sync with the
- * database row.
+ * Persists an upload the way the admin submits it: the file is already on its disk
+ * by the time the form is saved, so these helpers only fill in the storage metadata
+ * the model needs and keep the file in sync with the row.
  */
 final class MediaWriter
 {
@@ -32,9 +31,13 @@ final class MediaWriter
     }
 
     /**
-     * Updates the metadata of a media item. A new upload (a changed path)
-     * replaces the stored file; changing the folder only moves the metadata,
-     * never the file, so pages that already reference the file keep working.
+     * Updates the metadata of a media item. A changed path replaces the stored file;
+     * changing the folder is metadata only, so pages that already refer to the file
+     * keep working.
+     *
+     * A `folder_id` or `alt` the caller left out keeps the value already stored —
+     * only an explicit `null` clears one, so a caller that came to rename a file
+     * does not also lose where it was filed.
      *
      * @param  array<string, mixed>  $data
      */
@@ -46,8 +49,8 @@ final class MediaWriter
 
         $media->fill([
             'name' => (string) ($data['name'] ?? $media->name),
-            'alt' => $this->nullableString($data['alt'] ?? null),
-            'folder_id' => $data['folder_id'] ?? null,
+            'alt' => $this->nullableString($data['alt'] ?? $media->alt),
+            'folder_id' => $this->folderId($data, $media),
             'disk' => $disk,
             'path' => $path,
             'mime_type' => $path === $oldPath ? $media->mime_type : $this->mimeType($disk, $path),
@@ -63,6 +66,21 @@ final class MediaWriter
         }
 
         return $media;
+    }
+
+    /**
+     * The folder an update files the item under: the one the caller named, the one
+     * it is already in, or none when the caller explicitly cleared it.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function folderId(array $data, Media $media): ?int
+    {
+        if (array_key_exists('folder_id', $data)) {
+            return $data['folder_id'] === null ? null : (int) $data['folder_id'];
+        }
+
+        return $media->folder_id === null ? null : (int) $media->folder_id;
     }
 
     private function mimeType(string $disk, string $path): ?string

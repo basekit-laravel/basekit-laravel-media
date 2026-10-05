@@ -8,6 +8,10 @@
     failOnWarning="true"
 >
     <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
@@ -16,6 +20,14 @@
             <directory>tests/Filament</directory>
         </testsuite>
     </testsuites>
+
+    <source>
+        <!-- Without this, coverage has no file list to attribute hits to and
+             reports nothing however much of the suite runs. -->
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
 
     <php>
         <env name="APP_KEY" value="base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" />

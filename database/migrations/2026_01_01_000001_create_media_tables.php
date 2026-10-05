@@ -16,8 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->timestamps();
-
-            $table->index('parent_id');
         });
 
         Schema::create('media', function (Blueprint $table): void {
@@ -31,8 +29,19 @@ return new class extends Migration
             $table->string('alt')->nullable();
             $table->timestamps();
 
-            $table->unique(['disk', 'path']);
-            $table->index('folder_id');
+            // A deleted file is kept, so that putting it back is possible.
+            $table->softDeletes();
+
+            // Indexed rather than unique: a soft deleted row still holds its path,
+            // and a unique index would refuse the file being uploaded again. The
+            // model refuses the duplicate instead, with a message the form can show.
+            $table->index(['disk', 'path']);
+
+            // Resolving a stored value to a media item does not know the disk — a form
+            // hands over a URL and the disk's base is stripped off — and the composite
+            // index above leads with `disk`, so it cannot answer that without reading
+            // every entry. The single-column index is what keeps that a lookup.
+            $table->index('path');
         });
     }
 

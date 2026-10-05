@@ -13,6 +13,16 @@ use BasekitLaravel\BasekitLaravelMedia\Tests\TestSupport\FilamentProviders;
  */
 abstract class FilamentTestCase extends TestCase
 {
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The panel is behind Filament's auth middleware, so every admin test
+        // starts as a user who can enter it.
+        $this->actingAs(makeUser());
+    }
+
     /**
      * @return array<int, class-string>
      */

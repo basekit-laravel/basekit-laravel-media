@@ -7,17 +7,36 @@ namespace BasekitLaravel\BasekitLaravelMedia\Tests;
 use BasekitLaravel\BasekitLaravelMedia\BasekitLaravelMediaServiceProvider;
 use BasekitLaravel\BasekitLaravelMedia\Tests\TestSupport\Models\User;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
 {
+    /**
+     * The disk root this test wrote to, so it can be taken away again afterwards.
+     */
+    private ?string $mediaDiskRoot = null;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->migratePackageDatabase();
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        if ($this->mediaDiskRoot !== null) {
+            (new Filesystem)->deleteDirectory($this->mediaDiskRoot);
+
+            $this->mediaDiskRoot = null;
+        }
+
+        parent::tearDown();
     }
 
     #[\Override]
@@ -40,13 +59,17 @@ abstract class TestCase extends Orchestra
             'foreign_key_constraints' => true,
         ]);
 
-        // The media library writes to the configured disk, so the suite points
-        // it at a local disk rooted in the ephemeral storage directory. The
-        // `url` key makes `Media::storageUrl()` deterministic.
+        // The media library writes to the configured disk, so the suite points it
+        // at a local disk. Each test gets its own root and the root is deleted
+        // when the test ends: the suite uploads real files, and a shared root
+        // would leave every run's uploads behind for the next one to trip over.
+        // The `url` key makes `Media::storageUrl()` deterministic.
+        $this->mediaDiskRoot = storage_path('app/testing/'.Str::random(12));
+
         $app['config']->set('filesystems.default', 'testing');
         $app['config']->set('filesystems.disks.testing', [
             'driver' => 'local',
-            'root' => storage_path('app/testing'),
+            'root' => $this->mediaDiskRoot,
             'url' => '/storage',
             'visibility' => 'public',
         ]);

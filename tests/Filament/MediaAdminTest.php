@@ -10,11 +10,8 @@ use BasekitLaravel\BasekitLaravelMedia\Models\MediaFolder;
 use Filament\Facades\Filament;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Livewire;
 
 beforeEach(function (): void {
-    $this->actingAs(makeUser());
-
     Filament::setCurrentPanel(Filament::getPanel('media'));
 });
 
@@ -28,7 +25,7 @@ it('shows the folder tree and every file when no folder is open', function (): v
     $filed = makeMedia(['name' => 'filed.jpg', 'folder_id' => $folder->getKey()]);
     $loose = makeMedia(['name' => 'loose.jpg']);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->assertSuccessful()
         ->assertSee('Fees')
         ->assertSee('filed.jpg')
@@ -42,7 +39,7 @@ it('shows only the files of the folder that is open', function (): void {
     makeMedia(['name' => 'filed.jpg', 'folder_id' => $folder->getKey()]);
     makeMedia(['name' => 'loose.jpg']);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->set('folder', $folder->getKey())
         ->assertSee('filed.jpg')
         ->assertDontSee('loose.jpg');
@@ -53,7 +50,7 @@ it('filters the open folder by the search term', function (): void {
     makeMedia(['name' => 'cover.jpg', 'folder_id' => $folder->getKey()]);
     makeMedia(['name' => 'receipt.jpg', 'folder_id' => $folder->getKey()]);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->set('folder', $folder->getKey())
         ->set('search', 'receipt')
         ->assertSee('receipt.jpg')
@@ -63,7 +60,7 @@ it('filters the open folder by the search term', function (): void {
 it('opens a folder and comes back out of it again', function (): void {
     $folder = makeFolder('Fees');
 
-    $page = Livewire::test(MediaLibrary::class)
+    $page = mediaPage()
         ->call('selectFolder', $folder->getKey())
         ->assertSet('folder', $folder->getKey());
 
@@ -73,7 +70,7 @@ it('opens a folder and comes back out of it again', function (): void {
 it('uploads a file into the folder that is open', function (): void {
     $folder = makeFolder('Fees');
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->set('folder', $folder->getKey())
         ->mountAction('upload')
         ->fillForm([
@@ -91,7 +88,7 @@ it('uploads a file into the folder that is open', function (): void {
 });
 
 it('uploads a file at the top of the library when no folder is open', function (): void {
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->mountAction('upload')
         ->fillForm([
             'path' => UploadedFile::fake()->image('cover.jpg', 64, 64),
@@ -104,7 +101,7 @@ it('uploads a file at the top of the library when no folder is open', function (
 it('creates a folder inside the folder that is open and walks into it', function (): void {
     $parent = makeFolder('Fees');
 
-    $page = Livewire::test(MediaLibrary::class)
+    $page = mediaPage()
         ->set('folder', $parent->getKey())
         ->mountAction('newFolder')
         ->fillForm(['name' => '2026'])
@@ -123,7 +120,7 @@ it('files a dropped media item into a folder and leaves the file where it is', f
     $media = makeMedia();
     $path = $media->path;
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->call('moveMedia', $media->getKey(), $folder->getKey())
         ->assertHasNoErrors();
 
@@ -136,13 +133,13 @@ it('unfiles a media item dropped on the whole library', function (): void {
     $folder = makeFolder('Fees');
     $media = makeMedia(['folder_id' => $folder->getKey()]);
 
-    Livewire::test(MediaLibrary::class)->call('moveMedia', $media->getKey(), null);
+    mediaPage()->call('moveMedia', $media->getKey(), null);
 
     expect($media->fresh()?->folder_id)->toBeNull();
 });
 
 it('ignores a drop that carries no media item or names one that is gone', function (): void {
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->call('moveMedia', null, null)
         ->call('moveMedia', 404, null)
         ->assertHasNoErrors();
@@ -153,7 +150,7 @@ it('ignores a drop that carries no media item or names one that is gone', functi
 it('unfiles a media item dropped on a folder that is gone rather than failing', function (): void {
     $media = makeMedia(['folder_id' => makeFolder('Fees')->getKey()]);
 
-    Livewire::test(MediaLibrary::class)->call('moveMedia', $media->getKey(), 404);
+    mediaPage()->call('moveMedia', $media->getKey(), 404);
 
     expect($media->fresh()?->folder_id)->toBeNull();
 });
@@ -163,7 +160,7 @@ it('renders the action modals, so a mounted action has somewhere to open', funct
 
     // A page view that does not go through `x-filament::page` has no modal
     // container, and every action on it then mounts into nothing.
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->assertSeeHtml('wire:partial="action-modals"')
         ->assertSeeHtml('filamentActionModals');
 });
@@ -171,7 +168,7 @@ it('renders the action modals, so a mounted action has somewhere to open', funct
 it('wires the buttons on a tile to that item rather than to nothing', function (): void {
     $media = makeMedia(['name' => 'cover.jpg']);
 
-    $html = Livewire::test(MediaLibrary::class)->html();
+    $html = mediaPage()->html();
 
     foreach (['edit', 'move', 'delete'] as $action) {
         expect(mountedActionArguments($html, $action))->toBe([['id' => $media->getKey()]]);
@@ -181,7 +178,7 @@ it('wires the buttons on a tile to that item rather than to nothing', function (
 it('wires the delete button on a folder to that folder', function (): void {
     $folder = makeFolder('Fees');
 
-    $html = Livewire::test(MediaLibrary::class)->html();
+    $html = mediaPage()->html();
 
     // The folder is in the sidebar and in the grid, so there is more than one
     // button for it and every one of them has to name it.
@@ -191,11 +188,25 @@ it('wires the delete button on a folder to that folder', function (): void {
         ->and(array_values(array_unique(array_column($arguments, 'id'))))->toBe([$folder->getKey()]);
 });
 
+it('says in the confirmation that a deletion cannot be undone once soft deletes are off', function (): void {
+    config(['basekit-laravel-media.soft_deletes' => false]);
+
+    $media = makeMedia(['name' => 'cover.jpg']);
+
+    $component = mediaPage()->mountAction('delete', ['id' => $media->getKey()]);
+
+    // The wording promises a restore the application no longer has, so it has to
+    // follow the setting rather than always describing the softer default.
+    expect(mountedAction($component)->getModalDescription())->toBe(
+        'The file is removed from the library and from the disk. Nothing that refers to it will keep working, and it cannot be put back.',
+    );
+});
+
 it('confirms a deletion in a modal rather than in a browser dialog', function (): void {
     $media = makeMedia(['name' => 'cover.jpg']);
     $folder = makeFolder('Fees');
 
-    $component = Livewire::test(MediaLibrary::class);
+    $component = mediaPage();
 
     expect($component->instance()->deleteAction()->isConfirmationRequired())->toBeTrue()
         ->and($component->instance()->deleteFolderAction()->isConfirmationRequired())->toBeTrue();
@@ -205,11 +216,11 @@ it('confirms a deletion in a modal rather than in a browser dialog', function ()
     $component->mountAction('delete', ['id' => $media->getKey()]);
 
     expect(mountedAction($component)->getModalHeading())->toBe('Delete cover.jpg?')
-        ->and(mountedAction($component)->getModalDescription())->toBe('The file is removed from the library and from the disk. Nothing that refers to it will keep working.');
+        ->and(mountedAction($component)->getModalDescription())->toBe('The file leaves the library but stays on the disk, so it can be put back. Anything that refers to it will break in the meantime.');
 
     // A second action is mounted alongside the first rather than replacing it, so
     // the folder is confirmed on a component of its own.
-    $folders = Livewire::test(MediaLibrary::class)
+    $folders = mediaPage()
         ->mountAction('deleteFolder', ['id' => $folder->getKey()]);
 
     expect(mountedAction($folders)->getModalHeading())->toBe('Delete Fees?');
@@ -222,7 +233,7 @@ it('confirms a deletion in a modal rather than in a browser dialog', function ()
 it('edits the metadata of a media item from its tile', function (): void {
     $media = makeMedia(['name' => 'cover.jpg', 'alt' => 'Original alt']);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->mountAction('edit', ['id' => $media->getKey()])
         ->assertSchemaStateSet(['name' => 'cover.jpg', 'alt' => 'Original alt'])
         ->fillForm(['name' => 'Renamed.jpg', 'alt' => 'Replacement alt'])
@@ -239,7 +250,7 @@ it('shows the file itself in the edit modal, beside the fields that describe it'
 
     // A name and an alt text cannot be written against a filename, so the modal
     // has to show the file they are about.
-    expect(actionModalContent(Livewire::test(MediaLibrary::class), 'edit', ['id' => $media->getKey()]))
+    expect(actionModalContent(mediaPage(), 'edit', ['id' => $media->getKey()]))
         ->toContain('bkm-edit-preview')
         ->toContain($media->storageUrl())
         ->toContain('1 KB')
@@ -249,7 +260,7 @@ it('shows the file itself in the edit modal, beside the fields that describe it'
 it('opens the edit form when the image of a tile is clicked', function (): void {
     $media = makeMedia(['name' => 'cover.jpg']);
 
-    $html = Livewire::test(MediaLibrary::class)->html();
+    $html = mediaPage()->html();
 
     // The image is the way in to a file, and it names itself for anyone who cannot
     // see it. The click goes through Alpine because it shares a handler with the
@@ -264,7 +275,7 @@ it('opens the edit form when the image of a tile is clicked', function (): void 
         ->and($html)->toContain('x-on:pointerdown="justDragged = false"')
         ->and($html)->toContain('if (! justDragged)');
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->call('mountAction', 'edit', ['id' => $media->getKey()])
         ->assertSchemaStateSet(['name' => 'cover.jpg']);
 });
@@ -273,7 +284,7 @@ it('leaves the tile controls visible rather than only on hover', function (): vo
     makeMedia(['name' => 'cover.jpg']);
     makeFolder('Photos');
 
-    $html = Livewire::test(MediaLibrary::class)->html();
+    $html = mediaPage()->html();
 
     // A control that only exists while the pointer is over its tile is a control
     // nobody finds, so the groups are drawn dimmed and come to full strength on
@@ -288,7 +299,7 @@ it('moves a media item through the move form and prefills its folder', function 
     $to = makeFolder('Photos');
     $media = makeMedia(['folder_id' => $from->getKey()]);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->mountAction('move', ['id' => $media->getKey()])
         ->assertSchemaStateSet(['folder_id' => $from->getKey()])
         ->fillForm(['folder_id' => $to->getKey()])
@@ -297,16 +308,17 @@ it('moves a media item through the move form and prefills its folder', function 
     expect($media->fresh()?->folder_id)->toBe($to->getKey());
 });
 
-it('deletes a media item and its file from its tile', function (): void {
+it('deletes a media item from its tile but keeps its file so it can come back', function (): void {
     $media = makeMedia();
     $path = $media->path;
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->mountAction('delete', ['id' => $media->getKey()])
         ->callMountedAction();
 
     expect(Media::query()->count())->toBe(0)
-        ->and(Storage::disk(Media::diskName())->exists($path))->toBeFalse();
+        ->and(Media::withTrashed()->count())->toBe(1)
+        ->and(Storage::disk(Media::diskName())->exists($path))->toBeTrue();
 });
 
 it('deletes a folder but keeps the files it held', function (): void {
@@ -314,7 +326,7 @@ it('deletes a folder but keeps the files it held', function (): void {
     $child = makeFolder('2026', ['parent_id' => $folder->getKey()]);
     $media = makeMedia(['folder_id' => $child->getKey()]);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->set('folder', $folder->getKey())
         ->mountAction('deleteFolder', ['id' => $folder->getKey()])
         ->callMountedAction()
@@ -332,7 +344,7 @@ it('draws the folders of the open folder as tiles above its files', function ():
     makeMedia(['name' => 'cover.jpg', 'folder_id' => $parent->getKey()]);
 
     // The whole library: the folders at the top of the tree, and the files.
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->assertSeeHtmlInOrder([
             'data-folder-tile="photos"',
             'cover.jpg',
@@ -340,7 +352,7 @@ it('draws the folders of the open folder as tiles above its files', function ():
 
     // The open folder: the folders inside it, and its own files. The folder above
     // is no longer a tile, because the page is no longer the whole library.
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->set('folder', $parent->getKey())
         ->assertSeeHtml('data-folder-tile="2026"')
         ->assertSee('cover.jpg')
@@ -355,7 +367,7 @@ it('does not draw a folder of the open folder as a tile of the whole library', f
 
     // The sidebar still lists the whole tree, so only the tiles are a view of
     // what is inside the folder that is open.
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->assertSeeHtml('data-folder="2026"')
         ->assertSeeHtml('data-folder-tile="photos"')
         ->assertDontSeeHtml('data-folder-tile="2026"');
@@ -364,7 +376,7 @@ it('does not draw a folder of the open folder as a tile of the whole library', f
 it('offers the whole library as the root of the trail', function (): void {
     // With no folder open the whole library is the page the editor is on, so the
     // trail is a single segment and it is not a link to itself.
-    $html = Livewire::test(MediaLibrary::class)->html();
+    $html = mediaPage()->html();
 
     expect(breadcrumbLabels($html))->toBe(['All files'])
         ->and(breadcrumbLinks($html))->toBe([]);
@@ -374,7 +386,7 @@ it('walks the trail of the open folder back up to the library', function (): voi
     $parent = makeFolder('Photos');
     $child = makeFolder('2026', ['parent_id' => $parent->getKey()]);
 
-    $html = Livewire::test(MediaLibrary::class)
+    $html = mediaPage()
         ->set('folder', $child->getKey())
         ->html();
 
@@ -394,12 +406,12 @@ it('stops the trail where a parent chain never reaches the library', function ()
 
     // A cycle has no top to walk back to, so the trail is the chain that leads
     // into it rather than a walk that never ends.
-    expect(breadcrumbLabels(Livewire::test(MediaLibrary::class)->set('folder', $inner->getKey())->html()))
+    expect(breadcrumbLabels(mediaPage()->set('folder', $inner->getKey())->html()))
         ->toBe(['All files', 'Alpha', 'Mid']);
 });
 
 it('states how to file a file by dragging, rather than showing a bare icon', function (): void {
-    $html = Livewire::test(MediaLibrary::class)->html();
+    $html = mediaPage()->html();
 
     // The callout only renders a text wrapper for a heading, a description or a
     // footer, so text passed as a child of the component is dropped and the hint
@@ -410,12 +422,12 @@ it('states how to file a file by dragging, rather than showing a bare icon', fun
 });
 
 it('is only empty when there is nothing at all to show', function (): void {
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->assertSee('No media yet');
 
     $parent = makeFolder('Photos');
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->set('folder', $parent->getKey())
         ->assertSee('This folder is empty');
 
@@ -423,7 +435,7 @@ it('is only empty when there is nothing at all to show', function (): void {
     // files, so the empty state must not stand in for the folder to open.
     makeFolder('2026', ['parent_id' => $parent->getKey()]);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->set('folder', $parent->getKey())
         ->assertDontSee('This folder is empty')
         ->assertSeeHtml('data-folder="2026"');
@@ -434,7 +446,7 @@ it('draws the folder tree in name order with subfolders nested under their paren
     $parent = makeFolder('Alpha');
     makeFolder('Mid', ['parent_id' => $parent->getKey()]);
 
-    Livewire::test(MediaLibrary::class)
+    mediaPage()
         ->assertSeeHtmlInOrder([
             'data-folder="alpha"',
             'data-folder="mid"',
@@ -452,7 +464,7 @@ it('still draws a folder whose parent chain never reaches the top', function ():
     // page only ever creates a folder inside the one that is open.
     MediaFolder::query()->whereKey($outer->getKey())->update(['parent_id' => $inner->getKey()]);
 
-    $html = Livewire::test(MediaLibrary::class)
+    $html = mediaPage()
         ->assertSuccessful()
         ->html();
 

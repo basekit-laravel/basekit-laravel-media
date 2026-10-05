@@ -10,8 +10,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 /**
- * The table the picker embeds. It lists every media item so an editor can
- * browse the library, search it and choose one row.
+ * The table the picker embeds, so it lists every media item with a search and lets
+ * an editor choose one row.
  */
 final class MediaTableConfiguration
 {

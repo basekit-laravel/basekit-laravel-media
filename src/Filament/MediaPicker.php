@@ -4,28 +4,30 @@ declare(strict_types=1);
 
 namespace BasekitLaravel\BasekitLaravelMedia\Filament;
 
+use BasekitLaravel\BasekitLaravelMedia\Filament\Concerns\ConfiguresMediaUpload;
 use BasekitLaravel\BasekitLaravelMedia\Models\Media;
+use BasekitLaravel\BasekitLaravelMedia\Support\MediaAccess;
 use BasekitLaravel\BasekitLaravelMedia\Support\MediaWriter;
 use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\ModalTableSelect;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\View\ComponentAttributeBag as FilamentComponentAttributeBag;
 
 /**
- * A single-file picker for the media library. It is a drop-in replacement for
- * a URL field: the form state works on media IDs while the editor picks, and
- * the stored value is the file's web URL, so consuming models keep the string
- * they already publish. Legacy values that are URLs rather than IDs are shown
- * as-is and saved back unchanged. The picker carries a visible upload action,
- * both on the field itself and inside the media-selection modal, so an editor
- * can add a new media item without leaving the form:
+ * A single-file picker for the media library, and a drop-in replacement for a URL
+ * field: the form state works on media IDs while the editor picks, and the stored
+ * value is the file's web URL, so consuming models keep the string they publish.
  *
  *     MediaPicker::make('featured_image')->columnSpan(2)
+ *
+ * Values that are URLs rather than IDs pass through untouched, so data placed
+ * there before this field existed is never lost.
  */
 class MediaPicker extends ModalTableSelect
 {
+    use ConfiguresMediaUpload;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -59,21 +61,17 @@ class MediaPicker extends ModalTableSelect
             ->label(__('basekit-laravel-media::basekit-laravel-media.upload'))
             ->icon('heroicon-o-arrow-up-tray')
             ->button()
+            ->visible(fn (): bool => MediaAccess::allows('create'))
             ->modalHeading(__('basekit-laravel-media::basekit-laravel-media.upload'))
             ->schema([
-                FileUpload::make('path')
-                    ->label(__('basekit-laravel-media::basekit-laravel-media.file'))
-                    ->disk(Media::diskName())
-                    ->directory(Media::uploadDirectory())
-                    ->image()
-                    ->acceptedFileTypes(['image/*'])
-                    ->storeFileNamesIn('name')
-                    ->required(),
+                $this->mediaUpload(),
                 TextInput::make('alt')
                     ->label(__('basekit-laravel-media::basekit-laravel-media.alt'))
                     ->maxLength(255),
             ])
             ->action(function (array $data, MediaPicker $component): void {
+                MediaAccess::authorize('create');
+
                 $media = app(MediaWriter::class)->create($data);
 
                 $component->state((string) $media->getKey())->callAfterStateUpdated();
@@ -86,9 +84,9 @@ class MediaPicker extends ModalTableSelect
     }
 
     /**
-     * The parent embedded view renders a single "Select" action, so the upload
-     * would be invisible. Render it as a labeled button beside the Select
-     * action instead.
+     * The parent embedded view renders a single "Select" action and never its affix
+     * actions, so the upload would be invisible. Render it as a labeled button
+     * beside Select instead.
      */
     public function toEmbeddedHtml(): string
     {
@@ -116,6 +114,10 @@ class MediaPicker extends ModalTableSelect
                 'fi-fo-modal-table-select-disabled' => $isDisabled,
             ]);
 
+        // Asked here rather than inside the markup below: that markup is compiled on its
+        // own and knows nothing about the imports of this class.
+        $canUpload = MediaAccess::allows('create');
+
         ob_start(); ?>
 
         <div <?= $attributes->toHtml() ?>>
@@ -135,7 +137,10 @@ class MediaPicker extends ModalTableSelect
 
             <?php if (! $isDisabled) { ?>
                 <div class="fi-fo-media-picker-actions">
-                    <?= $this->getAction('upload')->toHtml() ?>
+                    <?php if ($canUpload) { ?>
+                        <?= $this->getAction('upload')->toHtml() ?>
+                    <?php } ?>
+
                     <?= $this->getAction('select')->toHtml() ?>
                 </div>
             <?php } ?>
@@ -145,22 +150,20 @@ class MediaPicker extends ModalTableSelect
     }
 
     /**
-     * The picker is not backed by a model relationship, so the relationship
-     * helpers the table select wires itself with would crash on an empty
-     * selection when there is no relationship to resolve.
+     * There is no model relationship behind this field, so the relationship hooks
+     * `ModalTableSelect` wires up would crash on an empty selection.
      */
     public function fillStateFromRelationship(): void {}
 
     /**
-     * The picker is not backed by a model relationship, so there is nothing to
-     * write through the related record when the form is saved.
+     * There is no model relationship behind this field, so there is nothing to
+     * write through a related record when the form is saved.
      */
     public function saveStateToRelationship(): void {}
 
     /**
-     * The media ID the field works on while editing. A stored URL of an
-     * existing media item resolves back to its ID; anything else is kept
-     * verbatim so it is never lost on save.
+     * The media ID the field works on while editing. A stored URL of a known item
+     * resolves back to its ID; anything else is kept verbatim so it is never lost.
      *
      * @param  mixed  $value  the stored value (web URL or media ID)
      */
@@ -178,8 +181,8 @@ class MediaPicker extends ModalTableSelect
     }
 
     /**
-     * The stored value of the field: the web URL of the chosen media item.
-     * Non-numeric state is already a stored value and passes through.
+     * The stored value of the field: the web URL of the chosen item. Non-numeric
+     * state is already a stored value and passes through.
      *
      * @param  mixed  $value  the form state (media ID, web URL or blank)
      */
