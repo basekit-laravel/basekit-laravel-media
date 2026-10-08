@@ -7,17 +7,14 @@ namespace BasekitLaravel\BasekitLaravelMedia\Support;
 use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 /**
- * Whether the signed-in user may use the media admin, and how that question is
- * answered.
- *
- * A policy the application registered for `Media` or `MediaFolder` is asked first,
- * so the package never has to know an application's permission scheme. Otherwise
- * the gate name under `permissions` is asked, and a `null` name allows: the
- * permissive default, so installing the package never locks an existing panel out
- * of its own media library.
+ * Whether the signed-in user may use the media admin. A policy the application
+ * registered for `Media` or `MediaFolder` wins; otherwise the gate name under
+ * `permissions` is asked, and `null` allows so the default is permissive.
  */
 final class MediaAccess
 {
@@ -38,8 +35,7 @@ final class MediaAccess
     }
 
     /**
-     * The abilities the admin screen gates, for a view that renders a button per
-     * ability rather than one button that is right or wrong for everybody.
+     * The abilities the admin screen gates, for a view that draws one button each.
      *
      * @return array<string, bool>
      */
@@ -55,8 +51,7 @@ final class MediaAccess
     }
 
     /**
-     * The server-side half of a gate: the button being hidden is a convenience, so
-     * the action that runs behind it asks again.
+     * Asks again on the server, because hiding a button is only a convenience.
      *
      * @param  'view'|'create'|'update'|'delete'  $ability
      *
@@ -75,8 +70,21 @@ final class MediaAccess
     {
         $gate = app(Gate::class);
 
-        $user = Filament::auth()->user();
+        $user = self::currentUser();
 
         return $user === null ? $gate : $gate->forUser($user);
+    }
+
+    /**
+     * The panel's guard inside Filament and the default guard outside it, since
+     * this class is asked from `Support/` and has to answer without Filament too.
+     */
+    private static function currentUser(): ?Authenticatable
+    {
+        if (! class_exists(Filament::class)) {
+            return Auth::user();
+        }
+
+        return Filament::auth()->user();
     }
 }

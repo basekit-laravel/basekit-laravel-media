@@ -38,6 +38,8 @@ do not embed generic Laravel guidance here.
 - `resources/views/` — Blade views exposed under the `basekit-laravel-media` view namespace
   (`view('basekit-laravel-media::view-name')`), publishable with
   `--tag="basekit-laravel-media-views"`.
+- `resources/css/basekit-laravel-media/` — the stylesheets those views rely on, registered as
+  Filament assets and published with `php artisan filament:assets`.
 - `src/Filament/` — the optional Filament layer: `MediaPlugin` (registers the screen on a
   panel), `Pages/MediaLibrary` (the screen itself), `MediaPicker` (the embeddable field),
   `MediaTableConfiguration` (the table both share) and
@@ -195,6 +197,20 @@ Record-level abilities must pass the row, so a policy gets to answer for that ro
   publishing the string they already stored. `resolveKey()` and `resolveStoredValue()`
   translate on the way in and out, and pass unknown values through untouched so data
   placed there before the picker existed is never lost.
+
+### Views and styling
+
+CSS lives in `resources/css/basekit-laravel-media/*.css` and is registered by
+`BasekitLaravelMediaServiceProvider::registerFilamentAssets()` as a Filament asset, which a
+consuming application publishes with `php artisan filament:assets`. **Never put a `<style>` block
+in a Blade view**: it opts that view out of the published stylesheet and has to be kept in step
+by hand. `tests/Unit/ViewConventionTest.php` enforces it.
+
+Class names follow BEM with `bkm` as the package prefix — `bkm-<block>` (`bkm-tile`),
+`bkm-<block>__<element>` (`bkm-tile__preview`), `bkm-<block>--<modifier>` (`bkm-folder--over`).
+`bkm` on its own is the prefix and never a block; the page root is `bkm-library`. Theme variables
+shared by several blocks are namespaced by the prefix (`--bkm-radius`), and a block's own by the
+block (`--bkm-edit-preview-border`).
 
 ### Storage
 

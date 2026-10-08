@@ -12,16 +12,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * A file stored on a Laravel filesystem disk, usually the featured picture of a
- * page. The row holds the storage metadata; the blob stays on the disk so it can
- * be served without the application.
- *
- * `delete()` is a soft delete and leaves the blob; `forceDelete()` takes both.
- * See `softDeletesEnabled()` for the setting that makes it permanent instead.
+ * A file stored on a Laravel filesystem disk: the row holds the metadata and the
+ * blob stays on the disk. `delete()` is a soft delete and leaves the blob;
+ * `forceDelete()` takes both.
  *
  * @property int $id
  * @property int|null $folder_id
@@ -44,9 +42,8 @@ class Media extends Model
     use HasFactory;
 
     /**
-     * The trait's own delete is aliased because a trait's methods are copied into
-     * the class: `parent::performDeleteOnModel()` would reach `Model`'s hard
-     * delete and turn every soft delete in the library into a real one.
+     * Reaches the trait's own delete: `parent::` would land on `Model`'s hard
+     * delete instead, because trait methods are copied into the class.
      */
     use SoftDeletes {
         performDeleteOnModel as performSoftDeleteOnModel;
@@ -78,8 +75,8 @@ class Media extends Model
         });
 
         static::deleting(function (Media $media): void {
-            // A soft delete has to leave the file alone, or there is nothing left
-            // to restore. Only a delete that takes the row takes the blob with it.
+            // A soft delete leaves the file behind, which is what makes
+            // restoring it possible.
             if ($media->removesFileWithRow()) {
                 $media->deleteFile();
             }
@@ -88,10 +85,6 @@ class Media extends Model
 
     /**
      * Whether deleting a media item is reversible.
-     *
-     * A trait cannot be applied conditionally, so the column and the trait are
-     * always present and this decides what `delete()` does with the row. Keeping
-     * the schema unconditional lets the setting change without a migration.
      */
     public static function softDeletesEnabled(): bool
     {
@@ -99,7 +92,7 @@ class Media extends Model
     }
 
     /**
-     * Whether the row is going away, and the file with it.
+     * The delete the trait would make, or a real one when soft deletes are off.
      *
      * @return mixed
      */
@@ -109,15 +102,15 @@ class Media extends Model
             return $this->performSoftDeleteOnModel();
         }
 
-        // What the trait does for a force delete, minus the recursion: going back
-        // through `forceDelete()` comes straight back here.
+        // The trait would call `forceDelete()`, which would come straight back
+        // here; this is that same delete without the recursion.
         return tap($this->setKeysForSaveQuery($this->newModelQuery())->forceDelete(), function (): void {
             $this->exists = false;
         });
     }
 
     /**
-     * Whether the row is going away, and the file with it.
+     * Whether this delete takes the file with the row.
      */
     protected function removesFileWithRow(): bool
     {
@@ -125,12 +118,8 @@ class Media extends Model
     }
 
     /**
-     * Two rows may not claim the same file: whichever page rendered second would
-     * show the wrong name and alt text for it.
-     *
-     * A model check rather than a unique index, because the index cannot hold a
-     * trashed row *and* allow its file to be uploaded again, and it fails as an
-     * opaque driver error instead of something the form can show.
+     * Refuses a second row for the same disk file, so the two cannot show
+     * different names and alt text for one upload.
      *
      * @throws ValidationException
      */
@@ -162,8 +151,7 @@ class Media extends Model
     }
 
     /**
-     * The web URL of the file, which is what a page stores as its featured
-     * image and what the public views render straight into an <img>.
+     * The web URL of the file, which is what a page stores as its featured image.
      */
     public function storageUrl(): string
     {
@@ -171,8 +159,16 @@ class Media extends Model
     }
 
     /**
-     * Remove the file from its disk. The row is left to the delete that triggered
-     * the model, so a bulk delete only touches the file once per row.
+     * The file size as an editor reads it, for the tile and the edit preview.
+     */
+    public function humanSize(): string
+    {
+        return Number::fileSize($this->size);
+    }
+
+    /**
+     * Remove the file from its disk. The row is left to the delete that
+     * triggered it.
      */
     public function deleteFile(): void
     {
@@ -220,8 +216,7 @@ class Media extends Model
     }
 
     /**
-     * The directory uploaded files are stored in, under the folder that was open
-     * at upload time.
+     * The directory uploads land in, under the folder open at upload time.
      */
     public static function uploadDirectory(?MediaFolder $folder = null): string
     {
@@ -234,12 +229,7 @@ class Media extends Model
     }
 
     /**
-     * The media item a consuming model saved by its web URL or storage path,
-     * which is how the picker shows the item that was chosen back then.
-     *
-     * Resolved on the indexed `path` column: this runs once per picker field while
-     * a form hydrates, so walking the table would cost a pass over the library for
-     * every image on the page.
+     * The media item a consuming model saved, by web URL or storage path.
      */
     public static function findByStorageValue(string $value): ?static
     {
@@ -262,8 +252,8 @@ class Media extends Model
     }
 
     /**
-     * The `path` values a stored value could be. A consuming model holds the web
-     * URL, so stripping the disk's base off it leaves the column value.
+     * The `path` values a stored value could be: a model holds the web URL, so
+     * stripping the disk's base off it leaves the column value.
      *
      * @return array<int, string>
      */
@@ -279,9 +269,8 @@ class Media extends Model
     }
 
     /**
-     * A value whose base this package does not recognise, such as a CDN URL
-     * written before the disk pointed at that CDN. No `path` can be derived from
-     * it, so the rows are compared by the URL each one actually builds.
+     * The item whose own URL matches, for a stored value no `path` can be
+     * derived from, such as one written before the disk pointed at it.
      */
     protected static function findByUnknownStorageUrl(string $value): ?static
     {

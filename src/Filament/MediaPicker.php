@@ -15,14 +15,13 @@ use Filament\Notifications\Notification;
 use Filament\Support\View\ComponentAttributeBag as FilamentComponentAttributeBag;
 
 /**
- * A single-file picker for the media library, and a drop-in replacement for a URL
- * field: the form state works on media IDs while the editor picks, and the stored
- * value is the file's web URL, so consuming models keep the string they publish.
+ * A single-file picker for the media library, and a drop-in replacement for a
+ * URL field: form state works on media IDs while the editor picks, and the
+ * stored value is the file's web URL.
  *
  *     MediaPicker::make('featured_image')->columnSpan(2)
  *
- * Values that are URLs rather than IDs pass through untouched, so data placed
- * there before this field existed is never lost.
+ * Values that are URLs rather than IDs pass through untouched.
  */
 class MediaPicker extends ModalTableSelect
 {
@@ -84,9 +83,8 @@ class MediaPicker extends ModalTableSelect
     }
 
     /**
-     * The parent embedded view renders a single "Select" action and never its affix
-     * actions, so the upload would be invisible. Render it as a labeled button
-     * beside Select instead.
+     * The parent view renders only its Select action, so the upload is drawn
+     * here as a button beside it.
      */
     public function toEmbeddedHtml(): string
     {
@@ -114,8 +112,8 @@ class MediaPicker extends ModalTableSelect
                 'fi-fo-modal-table-select-disabled' => $isDisabled,
             ]);
 
-        // Asked here rather than inside the markup below: that markup is compiled on its
-        // own and knows nothing about the imports of this class.
+        // Resolved here: the markup below is compiled on its own and sees none
+        // of this class's imports.
         $canUpload = MediaAccess::allows('create');
 
         ob_start(); ?>
@@ -150,20 +148,19 @@ class MediaPicker extends ModalTableSelect
     }
 
     /**
-     * There is no model relationship behind this field, so the relationship hooks
+     * There is no model relationship behind this field, so the hooks
      * `ModalTableSelect` wires up would crash on an empty selection.
      */
     public function fillStateFromRelationship(): void {}
 
     /**
-     * There is no model relationship behind this field, so there is nothing to
-     * write through a related record when the form is saved.
+     * Nothing to write through a related record when the form is saved.
      */
     public function saveStateToRelationship(): void {}
 
     /**
-     * The media ID the field works on while editing. A stored URL of a known item
-     * resolves back to its ID; anything else is kept verbatim so it is never lost.
+     * The media ID the field works on while editing: a stored URL of a known item
+     * resolves back to its ID, and anything else is kept verbatim.
      *
      * @param  mixed  $value  the stored value (web URL or media ID)
      */
@@ -181,8 +178,7 @@ class MediaPicker extends ModalTableSelect
     }
 
     /**
-     * The stored value of the field: the web URL of the chosen item. Non-numeric
-     * state is already a stored value and passes through.
+     * The web URL of the chosen item; non-numeric state is already a stored value.
      *
      * @param  mixed  $value  the form state (media ID, web URL or blank)
      */

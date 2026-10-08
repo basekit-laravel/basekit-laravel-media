@@ -23,6 +23,10 @@ precedence over anything in this file.
   `Model`'s hard delete. Say so in your summary if you touch the deletion path.
 - Every action that changes something must authorize server-side with `MediaAccess::authorize()`;
   `MediaAccess::allows()` alone only hides a button. A new action needs both halves.
+- CSS lives in `resources/css/basekit-laravel-media/*.css`, registered by the service provider as
+  a Filament asset — never inline a `<style>` block in a Blade view. Class names follow BEM with
+  `bkm` as prefix: `bkm-<block>`, `bkm-<block>__<element>`, `bkm-<block>--<modifier>`. `bkm` on
+  its own is the prefix, never a block.
 - Write commit messages as a single conventional-commit subject line (`feat:`, `fix:`,
   `perf:`, `docs:`, `ci:`, `chore:`) with no body. release-please uses those subjects for
   the changelog; put rationale in the pull request instead.

@@ -1,6 +1,6 @@
 {
   "name": "basekit-laravel/basekit-laravel-media",
-  "description": "Media library for Basekit Laravel — metadata for files stored on a Laravel filesystem disk, a folder hierarchy, a Filament administrator to upload and organise media, and a picker field any other package can embed to let editors choose an existing file.",
+  "description": "Media library for Laravel: metadata for files on a filesystem disk, a folder hierarchy and a Filament admin screen.",
   "keywords": [
     "laravel",
     "basekit",
@@ -41,7 +41,7 @@
     "rector/rector": "^2.6"
   },
   "suggest": {
-    "filament/filament": "Required to use the admin resources and the picker field."
+    "filament/filament": "Required to use the admin screen and the picker field."
   },
   "autoload": {
     "psr-4": {

@@ -8,9 +8,8 @@ use BasekitLaravel\BasekitLaravelMedia\Models\Media;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Persists an upload the way the admin submits it: the file is already on its disk
- * by the time the form is saved, so these helpers only fill in the storage metadata
- * the model needs and keep the file in sync with the row.
+ * Fills in the storage metadata of an upload and keeps the file in sync with
+ * the row it describes.
  */
 final class MediaWriter
 {
@@ -31,13 +30,8 @@ final class MediaWriter
     }
 
     /**
-     * Updates the metadata of a media item. A changed path replaces the stored file;
-     * changing the folder is metadata only, so pages that already refer to the file
-     * keep working.
-     *
-     * A `folder_id` or `alt` the caller left out keeps the value already stored —
-     * only an explicit `null` clears one, so a caller that came to rename a file
-     * does not also lose where it was filed.
+     * Updates the metadata of a media item. An omitted `folder_id` or `alt`
+     * keeps its stored value; only an explicit `null` clears one.
      *
      * @param  array<string, mixed>  $data
      */
