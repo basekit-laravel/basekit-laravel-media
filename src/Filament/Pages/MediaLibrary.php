@@ -8,6 +8,7 @@ use BackedEnum;
 use BasekitLaravel\BasekitLaravelMedia\Filament\Concerns\ConfiguresMediaUpload;
 use BasekitLaravel\BasekitLaravelMedia\Models\Media;
 use BasekitLaravel\BasekitLaravelMedia\Models\MediaFolder;
+use BasekitLaravel\BasekitLaravelMedia\Support\FolderTree;
 use BasekitLaravel\BasekitLaravelMedia\Support\MediaAccess;
 use BasekitLaravel\BasekitLaravelMedia\Support\MediaWriter;
 use Filament\Actions\Action;
@@ -25,24 +26,14 @@ use Livewire\WithPagination;
 use UnitEnum;
 
 /**
- * The whole media admin on one screen: the folder tree on the left, the files of the
- * open folder in a grid on the right, and every way of changing something — upload,
- * create a folder, move, edit, delete — available from the same page.
- *
- * A file moves between folders by being dropped on a folder in the tree; the *Move*
- * action does the same through a form, so the drag is a shortcut rather than the only
- * way.
+ * The whole media admin on one screen: the folder tree on the left, the files of
+ * the open folder on the right, and every way of changing something — upload,
+ * create a folder, move, edit, delete — from the same page.
  */
 class MediaLibrary extends Page
 {
     use ConfiguresMediaUpload;
     use WithPagination;
-
-    /**
-     * The group key a top-level folder hangs off, chosen so it cannot collide with
-     * a folder ID.
-     */
-    private const string ROOT = 'root';
 
     protected string $view = 'basekit-laravel-media::pages.media-library';
 
@@ -55,8 +46,8 @@ class MediaLibrary extends Page
     protected int $perPage = 24;
 
     /**
-     * The open folder, or `null` for every file in the library. It lives in the URL
-     * so a folder can be linked to and the back button walks out of it again.
+     * The open folder, or `null` for every file in the library. It lives in the
+     * URL so a folder can be linked to.
      */
     #[Url(as: 'folder')]
     public ?int $folder = null;
@@ -65,12 +56,9 @@ class MediaLibrary extends Page
     public string $search = '';
 
     /**
-     * The tree and the open folder are read by the view and by the forms of the
-     * action modals of the same request, so each is resolved once per request.
-     *
-     * @var array<int, array{folder: MediaFolder, depth: int}>|null
+     * Resolved once per request; the view and the action modals all read it.
      */
-    private ?array $resolvedFolderTree = null;
+    private ?FolderTree $tree = null;
 
     private bool $folderIsResolved = false;
 
@@ -82,9 +70,8 @@ class MediaLibrary extends Page
     }
 
     /**
-     * Filament lets every authenticated panel user reach a custom page unless the
-     * page says otherwise, which would put the whole library — delete buttons
-     * included — in front of anyone who can sign in. `MediaAccess` decides instead.
+     * Filament reaches every authenticated user by default, so this asks
+     * `MediaAccess` instead.
      */
     public static function canAccess(): bool
     {
@@ -102,8 +89,8 @@ class MediaLibrary extends Page
     }
 
     /**
-     * Open a folder, or pass `null` to see every file. The page is reset because
-     * the last page of the previous folder is not the last page of this one.
+     * Open a folder, or pass `null` to see every file. Pagination is reset,
+     * because the last page of one folder is not the last page of another.
      */
     public function selectFolder(?int $folder): void
     {
@@ -113,10 +100,7 @@ class MediaLibrary extends Page
 
     /**
      * File a media item into a folder. Both the drop on the tree and the *Move*
-     * action's form land here, so the two ways of moving a file behave the same.
-     *
-     * Only the metadata changes, so a page that already refers to the file keeps
-     * working. A drop naming a file or folder that no longer exists is ignored.
+     * form land here; only the metadata changes.
      */
     public function moveMedia(?int $media, ?int $folder): void
     {
@@ -130,9 +114,7 @@ class MediaLibrary extends Page
             return;
         }
 
-        // The drop calls straight into this method, so the check the hidden buttons
-        // got is made again here. The item is passed so a policy the application
-        // registered for `Media` gets to answer for this row.
+        // The drop reaches this method directly, so it asks here as well.
         MediaAccess::authorize('update', $item);
 
         $item->folder_id = $folder === null ? null : MediaFolder::query()->find($folder)?->getKey();
@@ -160,8 +142,7 @@ class MediaLibrary extends Page
     }
 
     /**
-     * Uploads land in the folder that is open, so the file appears where the editor
-     * is looking without a second choice to make.
+     * Uploads land in the folder that is open.
      */
     public function uploadAction(): Action
     {
@@ -198,8 +179,8 @@ class MediaLibrary extends Page
     }
 
     /**
-     * A new folder is a child of the folder that is open, which is what makes the
-     * tree grow where the editor is looking. Creating one also walks into it.
+     * A new folder is a child of the folder that is open; creating one also
+     * walks into it.
      */
     public function newFolderAction(): Action
     {
@@ -237,9 +218,8 @@ class MediaLibrary extends Page
     }
 
     /**
-     * The metadata of a single file, reached from the buttons on its tile. The view
-     * renders this once per tile and passes the item as an argument, so the buttons
-     * carry their own arguments rather than the markup hand-wiring a modal.
+     * The metadata of a single file, reached from the buttons on its tile. Each
+     * button carries the item id as its argument.
      */
     public function editAction(): Action
     {
@@ -285,9 +265,8 @@ class MediaLibrary extends Page
     }
 
     /**
-     * Moving a file without dragging it. The form is prefilled with the folder the
-     * file is in and offers the whole tree, so a file can move more than one level
-     * in a single step.
+     * Moving a file without dragging it. The form is prefilled with the folder
+     * the file is in.
      */
     public function moveAction(): Action
     {
@@ -318,8 +297,8 @@ class MediaLibrary extends Page
     }
 
     /**
-     * Deleting a file is confirmed in a modal that names it and says whether the
-     * deletion can be undone, rather than through the browser's own `confirm()`.
+     * Deleting a file, confirmed in a modal that names it and says whether the
+     * deletion can be undone.
      */
     public function deleteAction(): Action
     {
@@ -353,8 +332,8 @@ class MediaLibrary extends Page
     }
 
     /**
-     * Deleting a folder removes it and its subfolders, but not its files: the
-     * foreign key nulls rather than cascades, so they fall back to *All files*.
+     * Deleting a folder removes it and its subfolders, but not its files: they
+     * fall back to *All files*.
      */
     public function deleteFolderAction(): Action
     {
@@ -391,8 +370,7 @@ class MediaLibrary extends Page
 
     /**
      * What the signed-in user may do here, for a view that draws one button per
-     * ability rather than a single set of buttons that is right or wrong for
-     * everyone.
+     * ability.
      *
      * @return array<string, bool>
      */
@@ -407,10 +385,11 @@ class MediaLibrary extends Page
     protected function getViewData(): array
     {
         return [
-            'folders' => $this->folderTree(),
+            'folders' => $this->folderTree()->branches(),
             'childFolders' => $this->childFolders(),
             'breadcrumbs' => $this->folderBreadcrumbs(),
             'folderLabel' => $this->openFolderLabel(),
+            'emptyHeading' => $this->emptyHeading(),
             'media' => $this->media(),
             'totalCount' => Media::query()->count(),
             'currentFolder' => $this->currentFolder(),
@@ -419,70 +398,28 @@ class MediaLibrary extends Page
     }
 
     /**
-     * The folders inside the open folder, in the order they are drawn above its
-     * files. They are drawn whole while the files are paginated: a folder list long
-     * enough to matter is one the sidebar tree already serves.
+     * The folders inside the open folder, drawn whole while the files are
+     * paginated.
      *
      * @return Collection<int, MediaFolder>
      */
     protected function childFolders(): Collection
     {
-        return MediaFolder::query()
-            ->withCount('media')
-            ->when(
-                $this->folder === null,
-                fn (Builder $query): Builder => $query->whereNull('parent_id'),
-                fn (Builder $query): Builder => $query->where('parent_id', $this->folder),
-            )
-            ->orderBy('name')
-            ->get();
+        return $this->folderTree()->children($this->folder);
     }
 
     /**
-     * The trail from the top of the library down to the open folder. A chain that
-     * never reaches the top — or that reaches the folder itself — stops where it
-     * breaks rather than running for ever.
-     *
-     * @return array<int, MediaFolder>
-     */
-    protected function folderTrail(): array
-    {
-        $trail = [];
-        $walked = [];
-        $folder = $this->currentFolder();
-
-        while ($folder instanceof MediaFolder) {
-            if (isset($walked[$folder->getKey()])) {
-                break;
-            }
-
-            $walked[$folder->getKey()] = true;
-            array_unshift($trail, $folder);
-
-            $folder = $folder->parent_id === null
-                ? null
-                : MediaFolder::query()->find($folder->parent_id);
-        }
-
-        return $trail;
-    }
-
-    /**
-     * The breadcrumb for the open folder as the breadcrumb component takes it: each
-     * segment's target is its key and its label is the folder name, except the last
-     * segment, which has no key and so renders as the page the editor is on.
-     *
-     * Segments link rather than call the page, because the open folder is in the URL:
-     * that way the trail can be shared and the back button walks out of a folder.
+     * The breadcrumb for the open folder. The last segment has no key and
+     * renders as the page itself.
      *
      * @return array<int|string, string>
      */
     protected function folderBreadcrumbs(): array
     {
-        $trail = $this->folderTrail();
+        $trail = $this->folderTree()->trail($this->currentFolder());
 
-        // The whole library is the one place the editor is when no folder is
-        // open, so it is then the page the editor is on rather than a link to it.
+        // With no folder open the whole library is the page itself, not a link
+        // to it.
         if ($trail === []) {
             return [0 => __('basekit-laravel-media::basekit-laravel-media.all_files')];
         }
@@ -500,77 +437,22 @@ class MediaLibrary extends Page
     }
 
     /**
-     * Every folder, flattened into drawing order and paired with its depth, so the
-     * view walks the tree with one loop and no recursion.
-     *
-     * @return array<int, array{folder: MediaFolder, depth: int}>
+     * The folder hierarchy, resolved once per request.
      */
-    protected function folderTree(): array
+    protected function folderTree(): FolderTree
     {
-        if ($this->resolvedFolderTree !== null) {
-            return $this->resolvedFolderTree;
-        }
-
-        $folders = MediaFolder::query()
-            ->withCount('media')
-            ->orderBy('name')
-            ->get();
-
-        $byParent = $folders->groupBy(fn (MediaFolder $folder): string => (string) ($folder->parent_id ?? self::ROOT));
-
-        $tree = [];
-        $visited = [];
-
-        $append = function (?int $parentId, int $depth) use (&$append, &$tree, &$visited, $byParent): void {
-            foreach ($byParent->get((string) ($parentId ?? self::ROOT)) ?? [] as $folder) {
-                // A folder that claims an ancestor as its parent would otherwise
-                // be drawn for ever, so a folder is only ever drawn once.
-                if (isset($visited[$folder->getKey()])) {
-                    continue;
-                }
-
-                $visited[$folder->getKey()] = true;
-                $tree[] = ['folder' => $folder, 'depth' => $depth];
-
-                $append($folder->getKey(), $depth + 1);
-            }
-        };
-
-        $append(null, 0);
-
-        // A folder the walk below did not reach would be invisible in the tree and
-        // unreachable from the page, and its files would be too. That needs a parent
-        // chain written straight to the table, but an unreachable folder is still
-        // worth drawing, so the leftovers go on top.
-        foreach ($folders as $folder) {
-            if (isset($visited[$folder->getKey()])) {
-                continue;
-            }
-
-            $visited[$folder->getKey()] = true;
-            $tree[] = ['folder' => $folder, 'depth' => 0];
-
-            $append($folder->getKey(), 1);
-        }
-
-        return $this->resolvedFolderTree = $tree;
+        return $this->tree ??= new FolderTree;
     }
 
     /**
-     * The tree as `id => name`, indented by depth so a folder reads as nested in the
-     * dropdown of the *Move* action.
+     * The tree as `id => name`, indented by depth so a folder reads as nested in
+     * the dropdown of the *Move* action.
      *
      * @return array<int|string, string>
      */
     protected function folderOptions(): array
     {
-        $options = [];
-
-        foreach ($this->folderTree() as ['folder' => $folder, 'depth' => $depth]) {
-            $options[$folder->getKey()] = str_repeat('— ', $depth).$folder->name;
-        }
-
-        return $options;
+        return $this->folderTree()->options();
     }
 
     /**
@@ -626,6 +508,21 @@ class MediaLibrary extends Page
     }
 
     /**
+     * The heading of the empty state, which differs for the whole library and
+     * for an empty folder.
+     */
+    protected function emptyHeading(): string
+    {
+        $folder = $this->currentFolder();
+
+        if ($folder === null) {
+            return __('basekit-laravel-media::basekit-laravel-media.empty');
+        }
+
+        return __('basekit-laravel-media::basekit-laravel-media.empty_folder', ['folder' => $folder->name]);
+    }
+
+    /**
      * The media item an action was mounted for, or `null` when its arguments name an
      * item deleted since the page was rendered.
      *
@@ -676,7 +573,7 @@ class MediaLibrary extends Page
         $folder = $this->folderRecord($arguments);
 
         if ($folder === null) {
-            return __('basekit-laravel-media::basekit-laravel-media.media_item');
+            return __('basekit-laravel-media::basekit-laravel-media.folder');
         }
 
         return $folder->name;

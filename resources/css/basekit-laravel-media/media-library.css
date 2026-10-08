@@ -1,0 +1,340 @@
+/*
+ * The media library screen.
+ *
+ * Class names follow BEM with `bkm` as the package prefix: `bkm-<block>`,
+ * `bkm-<block>__<element>`, `bkm-<block>--<modifier>`. Registered as a Filament
+ * asset by BasekitLaravelMediaServiceProvider, so a consuming application only
+ * has to run `php artisan filament:assets`.
+ */
+.bkm-library {
+    --bkm-radius: 0.5rem;
+    --bkm-border: var(--gray-200, rgb(229 231 235));
+    --bkm-surface: var(--gray-50, rgb(249 250 251));
+    --bkm-muted: var(--gray-500, rgb(107 114 128));
+    --bkm-accent: var(--primary-600, rgb(4 120 87));
+}
+
+.dark .bkm-library {
+    --bkm-border: var(--gray-700, rgb(55 65 81));
+    --bkm-surface: var(--gray-900, rgb(24 24 27));
+    --bkm-muted: var(--gray-400, rgb(156 163 175));
+}
+
+/* Only the folder rows need this. The search field and the buttons carry
+   a Filament focus ring of their own, and a second ring drawn on top of
+   one is what makes a focused field look like it has a double border. */
+.bkm-library button:focus-visible {
+    outline: 2px solid var(--bkm-accent);
+    outline-offset: 2px;
+}
+
+.bkm-library :is(button, [role='button']) {
+    touch-action: manipulation;
+}
+
+/* Two panes side by side: the folders, then the files. */
+.bkm-library__body {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.bkm-library__folders {
+    flex: 0 0 15rem;
+    min-width: 0;
+}
+
+.bkm-library__files {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* A folder row is a navigation row, which Filament has no view
+   component for. `aria-current` marks the open folder, so the one rule
+   that styles it does not need to know which folder that is. */
+.bkm-folder {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    padding-right: 0.25rem;
+    border-radius: var(--bkm-radius);
+    user-select: none;
+}
+
+.bkm-folder__label {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    border-radius: var(--bkm-radius);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.bkm-folder__label > svg {
+    flex: 0 0 auto;
+}
+
+.bkm-folder__label > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bkm-folder__label:hover,
+.bkm-folder__label[aria-current='page'] {
+    background-color: var(--bkm-surface);
+}
+
+.bkm-folder__label[aria-current='page'] {
+    font-weight: 600;
+}
+
+.bkm-folder--over .bkm-folder__label {
+    outline: 2px dashed var(--bkm-accent);
+    outline-offset: -2px;
+}
+
+.bkm-folder__count {
+    flex: 0 0 auto;
+    color: var(--bkm-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Both action groups keep their place in the layout whether or not they
+   are showing, so a row never moves under the pointer reaching for it.
+
+   They are dimmed rather than hidden: a control that only exists while
+   the pointer is over its tile is a control nobody can find, and the
+   grid is the one place in the panel where the editor is looking for
+   the things they can do to a file. */
+.bkm-folder__actions,
+.bkm-folder-tile__actions,
+.bkm-tile__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.125rem;
+    opacity: 0.55;
+    transition: opacity 75ms;
+}
+
+.bkm-library__breadcrumbs {
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__search {
+    width: 100%;
+    max-width: 24rem;
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__hint {
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: 1rem;
+}
+
+.bkm-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--bkm-border);
+    border-radius: var(--bkm-radius);
+    overflow: hidden;
+    user-select: none;
+}
+
+/* A folder is drawn on the same cell as a file, so that the grid
+   reads the way a file browser does: what is here, then what is in
+   it. The cell is the same square the image of a file fills. */
+.bkm-folder-tile {
+    position: relative;
+    display: flex;
+    border: 1px solid var(--bkm-border);
+    border-radius: var(--bkm-radius);
+    background-color: var(--bkm-surface);
+    overflow: hidden;
+    user-select: none;
+}
+
+/* The label fills the cell so that the whole tile is the target, and
+   the cell is the same square the image of a file fills. */
+.bkm-folder-tile__label {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    padding: 0.75rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.bkm-folder-tile__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.bkm-folder-tile__name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.bkm-folder-tile--over {
+    outline: 2px dashed var(--bkm-accent);
+    outline-offset: -2px;
+}
+
+/* The image opens the edit form, so it is a button. It is drawn without
+   a frame of its own: the tile around it is already the frame. */
+.bkm-tile__preview {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+.bkm-tile__image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+.bkm-tile__caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: auto;
+    padding: 0.5rem;
+}
+
+/* The name grows to fill the first row, so the size sits beside it. The
+   folder is a plain line of its own rather than a badge, because a badge
+   wraps its own text and would make the tile three lines tall. */
+.bkm-tile__name {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+}
+
+.bkm-tile__folder {
+    display: flex;
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    color: var(--bkm-muted);
+    font-size: 0.6875rem;
+}
+
+.bkm-tile__folder > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The two overlay groups sit on top of a photograph, where an icon with
+   no backdrop is unreadable on a light one. The surface behind them
+   comes from the same variable as the tile, so it follows the theme. */
+.bkm-folder-tile__actions,
+.bkm-tile__actions {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    padding: 0.125rem;
+    border-radius: var(--bkm-radius);
+    background-color: var(--bkm-surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+}
+
+.bkm-library__pagination {
+    margin-top: 1rem;
+}
+
+/* A pointer that cannot hover never gets the pointer-over that brings
+   these controls to full strength, so on touch they are simply shown. */
+@media (hover: hover) and (pointer: fine) {
+    .bkm-folder,
+    .bkm-folder-tile,
+    .bkm-tile {
+        cursor: grab;
+    }
+
+    .bkm-folder-tile__label {
+        cursor: pointer;
+    }
+
+    .bkm-folder:hover .bkm-folder__actions,
+    .bkm-folder:focus-within .bkm-folder__actions,
+    .bkm-folder-tile:hover .bkm-folder-tile__actions,
+    .bkm-folder-tile:focus-within .bkm-folder-tile__actions,
+    .bkm-tile:hover .bkm-tile__actions,
+    .bkm-tile:focus-within .bkm-tile__actions {
+        opacity: 1;
+    }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .bkm-folder__actions,
+    .bkm-folder-tile__actions,
+    .bkm-tile__actions {
+        opacity: 1;
+    }
+
+    .bkm-library__hint {
+        display: none;
+    }
+}
+
+/* A sidebar and a grid of images cannot share a tablet in portrait, so
+   below this width the folders move above the files and the folders
+   section folds itself out of the way. */
+@media (max-width: 63.99rem) {
+    .bkm-library__body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bkm-library__folders {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+/* On a phone the images get the width the screen can spare. */
+@media (max-width: 47.99rem) {
+    .bkm-library__grid {
+        grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+        gap: 0.75rem;
+    }
+}

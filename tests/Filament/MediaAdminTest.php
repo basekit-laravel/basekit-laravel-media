@@ -265,7 +265,7 @@ it('opens the edit form when the image of a tile is clicked', function (): void 
     // The image is the way in to a file, and it names itself for anyone who cannot
     // see it. The click goes through Alpine because it shares a handler with the
     // guard that keeps a drag from counting as a click.
-    expect($html)->toContain('class="bkm-tile-preview"')
+    expect($html)->toContain('class="bkm-tile__preview"')
         ->and($html)->toContain('$wire.mountAction(\'edit\', { id: '.$media->getKey().' })')
         ->and($html)->toContain('aria-label="Preview: cover.jpg"');
 
@@ -285,13 +285,17 @@ it('leaves the tile controls visible rather than only on hover', function (): vo
     makeFolder('Photos');
 
     $html = mediaPage()->html();
+    $css = file_get_contents(__DIR__.'/../../resources/css/basekit-laravel-media/media-library.css');
 
     // A control that only exists while the pointer is over its tile is a control
     // nobody finds, so the groups are drawn dimmed and come to full strength on
-    // hover rather than starting at nothing.
-    expect($html)->toContain('opacity: 0.55')
-        ->and($html)->not->toContain('opacity: 0;')
-        ->and($html)->toContain('.bkm-tile:hover .bkm-tile-actions');
+    // hover rather than starting at nothing. The stylesheet lives beside the
+    // package rather than in the view, so the selector it dims by is checked
+    // against the class the page actually renders.
+    expect($html)->toContain('class="bkm-tile__actions"')
+        ->and($css)->toContain('opacity: 0.55')
+        ->and($css)->not->toContain('opacity: 0;')
+        ->and($css)->toContain('.bkm-tile:hover .bkm-tile__actions');
 });
 
 it('moves a media item through the move form and prefills its folder', function (): void {
@@ -416,7 +420,7 @@ it('states how to file a file by dragging, rather than showing a bare icon', fun
     // The callout only renders a text wrapper for a heading, a description or a
     // footer, so text passed as a child of the component is dropped and the hint
     // is left as an icon that says nothing.
-    expect($html)->toContain('fi-callout bkm-hint')
+    expect($html)->toContain('fi-callout bkm-library__hint')
         ->and($html)->toContain('Drag a file onto a folder to file it there.')
         ->and($html)->toContain('fi-callout-description');
 });
