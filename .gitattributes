@@ -13,6 +13,10 @@
 /testbench.yaml     export-ignore
 /.phpstan.cache     export-ignore
 /.phpunit.cache     export-ignore
+/package.json       export-ignore
+/package-lock.json  export-ignore
+/postcss.config.cjs export-ignore
+/resources/css/src  export-ignore
 
 *.blade.php linguist-language=Blade
 *.php      linguist-language=PHP

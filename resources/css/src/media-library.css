@@ -1,0 +1,16 @@
+/*
+ * The media library screen — the entry point of the stylesheet build.
+ *
+ * Class names follow BEM with `bkm` as the package prefix: `bkm-<block>`,
+ * `bkm-<block>__<element>`, `bkm-<block>--<modifier>`. `npm run css:dist`
+ * inlines the partials below into
+ * `resources/css/dist/media-library.css`, which
+ * BasekitLaravelMediaServiceProvider registers as a Filament asset, so a
+ * consuming application only has to run `php artisan filament:assets`.
+ */
+@import "./media-library/theme.css";
+@import "./media-library/layout.css";
+@import "./media-library/folder-tree.css";
+@import "./media-library/actions.css";
+@import "./media-library/tiles.css";
+@import "./media-library/responsive.css";

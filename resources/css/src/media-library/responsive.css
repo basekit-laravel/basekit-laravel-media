@@ -1,0 +1,62 @@
+/*
+ * Pointer and viewport variants. These come last so they win over the rules
+ * they switch.
+ */
+
+/* A pointer that cannot hover never gets the pointer-over that brings
+   these controls to full strength, so on touch they are simply shown. */
+@media (hover: hover) and (pointer: fine) {
+    .bkm-folder,
+    .bkm-folder-tile,
+    .bkm-tile {
+        cursor: grab;
+    }
+
+    .bkm-folder-tile__label {
+        cursor: pointer;
+    }
+
+    .bkm-folder:hover .bkm-folder__actions,
+    .bkm-folder:focus-within .bkm-folder__actions,
+    .bkm-folder-tile:hover .bkm-folder-tile__actions,
+    .bkm-folder-tile:focus-within .bkm-folder-tile__actions,
+    .bkm-tile:hover .bkm-tile__actions,
+    .bkm-tile:focus-within .bkm-tile__actions {
+        opacity: 1;
+    }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .bkm-folder__actions,
+    .bkm-folder-tile__actions,
+    .bkm-tile__actions {
+        opacity: 1;
+    }
+
+    .bkm-library__hint {
+        display: none;
+    }
+}
+
+/* A sidebar and a grid of images cannot share a tablet in portrait, so
+   below this width the folders move above the files and the folders
+   section folds itself out of the way. */
+@media (max-width: 63.99rem) {
+    .bkm-library__body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bkm-library__folders {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+/* On a phone the images get the width the screen can spare. */
+@media (max-width: 47.99rem) {
+    .bkm-library__grid {
+        grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+        gap: 0.75rem;
+    }
+}

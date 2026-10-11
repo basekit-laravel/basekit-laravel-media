@@ -1,13 +1,20 @@
 /*
- * The media library screen.
+ * The media library screen — the entry point of the stylesheet build.
  *
  * Class names follow BEM with `bkm` as the package prefix: `bkm-<block>`,
- * `bkm-<block>__<element>`, `bkm-<block>--<modifier>`. Registered as a Filament
- * asset by BasekitLaravelMediaServiceProvider, so a consuming application only
- * has to run `php artisan filament:assets`.
+ * `bkm-<block>__<element>`, `bkm-<block>--<modifier>`. `npm run css:dist`
+ * inlines the partials below into
+ * `resources/css/dist/media-library.css`, which
+ * BasekitLaravelMediaServiceProvider registers as a Filament asset, so a
+ * consuming application only has to run `php artisan filament:assets`.
+ */
+/*
+ * Theme variables for the page, and the element resets every control on it
+ * shares. Colour and radius come from Filament's own custom properties, so a
+ * panel theme reaches the package; the literals are only the fallbacks.
  */
 .bkm-library {
-    --bkm-radius: 0.5rem;
+    --bkm-radius: var(--radius-lg, 0.5rem);
     --bkm-border: var(--gray-200, rgb(229 231 235));
     --bkm-surface: var(--gray-50, rgb(249 250 251));
     --bkm-muted: var(--gray-500, rgb(107 114 128));
@@ -20,10 +27,12 @@
     --bkm-muted: var(--gray-400, rgb(156 163 175));
 }
 
-/* Only the folder rows need this. The search field and the buttons carry
-   a Filament focus ring of their own, and a second ring drawn on top of
-   one is what makes a focused field look like it has a double border. */
-.bkm-library button:focus-visible {
+/* Only the buttons this package renders itself: a Filament button carries a
+   focus ring of its own and switches its outline off, and drawing a second
+   ring on top of one is what makes a focused control look double-bordered. */
+.bkm-library .bkm-folder__label:focus-visible,
+.bkm-library .bkm-folder-tile__label:focus-visible,
+.bkm-library .bkm-tile__preview:focus-visible {
     outline: 2px solid var(--bkm-accent);
     outline-offset: 2px;
 }
@@ -31,6 +40,9 @@
 .bkm-library :is(button, [role='button']) {
     touch-action: manipulation;
 }
+/*
+ * The page skeleton: the two panes, then what sits above the grid of files.
+ */
 
 /* Two panes side by side: the folders, then the files. */
 .bkm-library__body {
@@ -49,9 +61,34 @@
     min-width: 0;
 }
 
-/* A folder row is a navigation row, which Filament has no view
-   component for. `aria-current` marks the open folder, so the one rule
-   that styles it does not need to know which folder that is. */
+.bkm-library__breadcrumbs {
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__search {
+    width: 100%;
+    max-width: 24rem;
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__hint {
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: 1rem;
+}
+
+.bkm-library__pagination {
+    margin-top: 1rem;
+}
+/*
+ * The folder rows down the left. A folder row is a navigation row, which
+ * Filament has no view component for. `aria-current` marks the open folder, so
+ * the rule that styles it does not need to know which folder that is.
+ */
 .bkm-folder {
     display: flex;
     align-items: center;
@@ -108,14 +145,17 @@
     font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
 }
-
-/* Both action groups keep their place in the layout whether or not they
-   are showing, so a row never moves under the pointer reaching for it.
-
-   They are dimmed rather than hidden: a control that only exists while
-   the pointer is over its tile is a control nobody can find, and the
-   grid is the one place in the panel where the editor is looking for
-   the things they can do to a file. */
+/*
+ * The action groups every tile and folder row carries.
+ *
+ * Both groups keep their place in the layout whether or not they are showing,
+ * so a row never moves under the pointer reaching for it.
+ *
+ * They are dimmed rather than hidden: a control that only exists while the
+ * pointer is over its tile is a control nobody can find, and the grid is the
+ * one place in the panel where the editor is looking for the things they can
+ * do to a file.
+ */
 .bkm-folder__actions,
 .bkm-folder-tile__actions,
 .bkm-tile__actions {
@@ -127,26 +167,24 @@
     transition: opacity 75ms;
 }
 
-.bkm-library__breadcrumbs {
-    margin-bottom: 0.75rem;
+/* The two overlay groups sit on top of a photograph, where an icon with
+   no backdrop is unreadable on a light one. The surface behind them
+   comes from the same variable as the tile, so it follows the theme. */
+.bkm-folder-tile__actions,
+.bkm-tile__actions {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    padding: 0.125rem;
+    border-radius: var(--bkm-radius);
+    background-color: var(--bkm-surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
 }
-
-.bkm-library__search {
-    width: 100%;
-    max-width: 24rem;
-    margin-bottom: 0.75rem;
-}
-
-.bkm-library__hint {
-    margin-bottom: 0.75rem;
-}
-
-.bkm-library__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-    gap: 1rem;
-}
-
+/*
+ * The cells of the grid: folders and files side by side, drawn on the same
+ * square so the grid reads the way a file browser does — what is here, then
+ * what is in it.
+ */
 .bkm-tile {
     position: relative;
     display: flex;
@@ -157,9 +195,6 @@
     user-select: none;
 }
 
-/* A folder is drawn on the same cell as a file, so that the grid
-   reads the way a file browser does: what is here, then what is in
-   it. The cell is the same square the image of a file fills. */
 .bkm-folder-tile {
     position: relative;
     display: flex;
@@ -262,24 +297,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-/* The two overlay groups sit on top of a photograph, where an icon with
-   no backdrop is unreadable on a light one. The surface behind them
-   comes from the same variable as the tile, so it follows the theme. */
-.bkm-folder-tile__actions,
-.bkm-tile__actions {
-    position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
-    padding: 0.125rem;
-    border-radius: var(--bkm-radius);
-    background-color: var(--bkm-surface);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
-}
-
-.bkm-library__pagination {
-    margin-top: 1rem;
-}
+/*
+ * Pointer and viewport variants. These come last so they win over the rules
+ * they switch.
+ */
 
 /* A pointer that cannot hover never gets the pointer-over that brings
    these controls to full strength, so on touch they are simply shown. */

@@ -1,0 +1,14 @@
+{
+  "name": "basekit-laravel-media",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stylesheet build for basekit-laravel-media",
+  "scripts": {
+    "css:dist": "postcss --config postcss.config.cjs resources/css/src/*.css --base resources/css/src --dir resources/css/dist"
+  },
+  "devDependencies": {
+    "postcss": "^8.4.38",
+    "postcss-cli": "^11.0.0",
+    "postcss-import": "^14.1.0"
+  }
+}

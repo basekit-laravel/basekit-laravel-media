@@ -1,0 +1,35 @@
+/*
+ * The action groups every tile and folder row carries.
+ *
+ * Both groups keep their place in the layout whether or not they are showing,
+ * so a row never moves under the pointer reaching for it.
+ *
+ * They are dimmed rather than hidden: a control that only exists while the
+ * pointer is over its tile is a control nobody can find, and the grid is the
+ * one place in the panel where the editor is looking for the things they can
+ * do to a file.
+ */
+.bkm-folder__actions,
+.bkm-folder-tile__actions,
+.bkm-tile__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.125rem;
+    opacity: 0.55;
+    transition: opacity 75ms;
+}
+
+/* The two overlay groups sit on top of a photograph, where an icon with
+   no backdrop is unreadable on a light one. The surface behind them
+   comes from the same variable as the tile, so it follows the theme. */
+.bkm-folder-tile__actions,
+.bkm-tile__actions {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    padding: 0.125rem;
+    border-radius: var(--bkm-radius);
+    background-color: var(--bkm-surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+}

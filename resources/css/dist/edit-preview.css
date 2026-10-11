@@ -2,8 +2,9 @@
  * The file preview above the edit form, in the action modal.
  *
  * It renders outside the `bkm-library` root, which is why it defines its own
- * theme variables rather than inheriting the page's. Registered as a Filament
- * asset by BasekitLaravelMediaServiceProvider.
+ * theme variables rather than inheriting the page's. `npm run css:dist` copies
+ * this file to `resources/css/dist/edit-preview.css`, which
+ * BasekitLaravelMediaServiceProvider registers as a Filament asset.
  */
 .bkm-edit-preview {
     --bkm-edit-preview-border: var(--gray-200, rgb(229 231 235));
@@ -26,7 +27,7 @@
     max-height: 18rem;
     margin-inline: auto;
     border: 1px solid var(--bkm-edit-preview-border);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-lg, 0.5rem);
     background-color: var(--bkm-edit-preview-surface);
     object-fit: contain;
 }

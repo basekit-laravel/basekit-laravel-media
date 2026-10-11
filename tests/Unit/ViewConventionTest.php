@@ -18,3 +18,20 @@ it('keeps its stylesheets in files rather than inlining them in a view', functio
     // block put back into a view would quietly opt that view out.
     expect($inlined)->toBe([]);
 });
+
+it('ships the stylesheets built rather than as sources', function (): void {
+    $dist = __DIR__.'/../../resources/css/dist';
+    $src = __DIR__.'/../../resources/css/src';
+
+    // One built file per entry: a new entry under src/ without its built
+    // counterpart would ship as nothing and nobody would notice.
+    foreach (File::files($src) as $entry) {
+        expect(File::exists($dist.'/'.$entry->getFilename()))->toBeTrue();
+    }
+
+    // Only dist ships, so it has to be what `npm run css:dist` produces. An
+    // `@import` left in a built file means the sources were never inlined.
+    foreach (File::allFiles($dist) as $built) {
+        expect($built->getContents())->not->toContain('@import');
+    }
+});

@@ -58,11 +58,11 @@ final class BasekitLaravelMediaServiceProvider extends ServiceProvider
         FilamentAsset::register([
             Css::make(
                 'basekit-laravel-media/media-library',
-                __DIR__.'/../resources/css/basekit-laravel-media/media-library.css',
+                __DIR__.'/../resources/css/dist/media-library.css',
             ),
             Css::make(
                 'basekit-laravel-media/edit-preview',
-                __DIR__.'/../resources/css/basekit-laravel-media/edit-preview.css',
+                __DIR__.'/../resources/css/dist/edit-preview.css',
             ),
         ]);
     }

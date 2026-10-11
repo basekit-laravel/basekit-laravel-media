@@ -285,7 +285,7 @@ it('leaves the tile controls visible rather than only on hover', function (): vo
     makeFolder('Photos');
 
     $html = mediaPage()->html();
-    $css = file_get_contents(__DIR__.'/../../resources/css/basekit-laravel-media/media-library.css');
+    $css = file_get_contents(__DIR__.'/../../resources/css/dist/media-library.css');
 
     // A control that only exists while the pointer is over its tile is a control
     // nobody finds, so the groups are drawn dimmed and come to full strength on

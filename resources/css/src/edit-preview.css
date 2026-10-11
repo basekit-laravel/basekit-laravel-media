@@ -1,0 +1,47 @@
+/*
+ * The file preview above the edit form, in the action modal.
+ *
+ * It renders outside the `bkm-library` root, which is why it defines its own
+ * theme variables rather than inheriting the page's. `npm run css:dist` copies
+ * this file to `resources/css/dist/edit-preview.css`, which
+ * BasekitLaravelMediaServiceProvider registers as a Filament asset.
+ */
+.bkm-edit-preview {
+    --bkm-edit-preview-border: var(--gray-200, rgb(229 231 235));
+    --bkm-edit-preview-surface: var(--gray-50, rgb(249 250 251));
+    --bkm-edit-preview-muted: var(--gray-500, rgb(107 114 128));
+}
+
+.dark .bkm-edit-preview {
+    --bkm-edit-preview-border: var(--gray-700, rgb(55 65 81));
+    --bkm-edit-preview-surface: var(--gray-900, rgb(24 24 27));
+    --bkm-edit-preview-muted: var(--gray-400, rgb(156 163 175));
+}
+
+/* Contained rather than cropped: the editor is looking at the whole
+   file here, not at the square the grid shows, and a cropped preview
+   would show them a framing the site does not use. */
+.bkm-edit-preview__image {
+    display: block;
+    max-width: 100%;
+    max-height: 18rem;
+    margin-inline: auto;
+    border: 1px solid var(--bkm-edit-preview-border);
+    border-radius: var(--radius-lg, 0.5rem);
+    background-color: var(--bkm-edit-preview-surface);
+    object-fit: contain;
+}
+
+.bkm-edit-preview__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+    color: var(--bkm-edit-preview-muted);
+    font-size: 0.75rem;
+}
+
+.bkm-edit-preview__meta-sep {
+    opacity: 0.5;
+}

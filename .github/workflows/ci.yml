@@ -12,6 +12,9 @@ on:
       - 'tests/**'
       - 'composer.json'
       - 'composer.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'postcss.config.cjs'
       - 'phpunit.xml'
       - 'phpstan.neon.dist'
       - 'testbench.yaml'
@@ -27,6 +30,9 @@ on:
       - 'tests/**'
       - 'composer.json'
       - 'composer.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'postcss.config.cjs'
       - 'phpunit.xml'
       - 'phpstan.neon.dist'
       - 'testbench.yaml'
@@ -167,3 +173,32 @@ jobs:
 
       - name: Run static analysis
         run: composer analyse
+
+  stylesheets:
+    name: Stylesheets are built
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild the stylesheets
+        run: npm run css:dist
+
+      - name: Fail when the build is not committed
+        # resources/css/dist ships, so it has to match resources/css/src. Running
+        # the build here and diffing is the only way to know it does.
+        run: |
+          if ! git diff --exit-code -- resources/css/dist; then
+            echo "::error::resources/css/dist is out of date. Run 'npm run css:dist' and commit the result."
+            exit 1
+          fi

@@ -1,0 +1,117 @@
+/*
+ * The cells of the grid: folders and files side by side, drawn on the same
+ * square so the grid reads the way a file browser does — what is here, then
+ * what is in it.
+ */
+.bkm-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--bkm-border);
+    border-radius: var(--bkm-radius);
+    overflow: hidden;
+    user-select: none;
+}
+
+.bkm-folder-tile {
+    position: relative;
+    display: flex;
+    border: 1px solid var(--bkm-border);
+    border-radius: var(--bkm-radius);
+    background-color: var(--bkm-surface);
+    overflow: hidden;
+    user-select: none;
+}
+
+/* The label fills the cell so that the whole tile is the target, and
+   the cell is the same square the image of a file fills. */
+.bkm-folder-tile__label {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    padding: 0.75rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.bkm-folder-tile__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.bkm-folder-tile__name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.bkm-folder-tile--over {
+    outline: 2px dashed var(--bkm-accent);
+    outline-offset: -2px;
+}
+
+/* The image opens the edit form, so it is a button. It is drawn without
+   a frame of its own: the tile around it is already the frame. */
+.bkm-tile__preview {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+.bkm-tile__image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+.bkm-tile__caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: auto;
+    padding: 0.5rem;
+}
+
+/* The name grows to fill the first row, so the size sits beside it. The
+   folder is a plain line of its own rather than a badge, because a badge
+   wraps its own text and would make the tile three lines tall. */
+.bkm-tile__name {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+}
+
+.bkm-tile__folder {
+    display: flex;
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    color: var(--bkm-muted);
+    font-size: 0.6875rem;
+}
+
+.bkm-tile__folder > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

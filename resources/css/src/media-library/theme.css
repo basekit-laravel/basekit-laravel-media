@@ -1,0 +1,32 @@
+/*
+ * Theme variables for the page, and the element resets every control on it
+ * shares. Colour and radius come from Filament's own custom properties, so a
+ * panel theme reaches the package; the literals are only the fallbacks.
+ */
+.bkm-library {
+    --bkm-radius: var(--radius-lg, 0.5rem);
+    --bkm-border: var(--gray-200, rgb(229 231 235));
+    --bkm-surface: var(--gray-50, rgb(249 250 251));
+    --bkm-muted: var(--gray-500, rgb(107 114 128));
+    --bkm-accent: var(--primary-600, rgb(4 120 87));
+}
+
+.dark .bkm-library {
+    --bkm-border: var(--gray-700, rgb(55 65 81));
+    --bkm-surface: var(--gray-900, rgb(24 24 27));
+    --bkm-muted: var(--gray-400, rgb(156 163 175));
+}
+
+/* Only the buttons this package renders itself: a Filament button carries a
+   focus ring of its own and switches its outline off, and drawing a second
+   ring on top of one is what makes a focused control look double-bordered. */
+.bkm-library .bkm-folder__label:focus-visible,
+.bkm-library .bkm-folder-tile__label:focus-visible,
+.bkm-library .bkm-tile__preview:focus-visible {
+    outline: 2px solid var(--bkm-accent);
+    outline-offset: 2px;
+}
+
+.bkm-library :is(button, [role='button']) {
+    touch-action: manipulation;
+}

@@ -1,0 +1,44 @@
+/*
+ * The page skeleton: the two panes, then what sits above the grid of files.
+ */
+
+/* Two panes side by side: the folders, then the files. */
+.bkm-library__body {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.bkm-library__folders {
+    flex: 0 0 15rem;
+    min-width: 0;
+}
+
+.bkm-library__files {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.bkm-library__breadcrumbs {
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__search {
+    width: 100%;
+    max-width: 24rem;
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__hint {
+    margin-bottom: 0.75rem;
+}
+
+.bkm-library__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: 1rem;
+}
+
+.bkm-library__pagination {
+    margin-top: 1rem;
+}
