@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - 'src/**'
       - 'config/**'
@@ -20,7 +20,7 @@ on:
       - 'testbench.yaml'
       - '.github/workflows/**'
   pull_request:
-    branches: [main]
+    branches: [master]
     paths:
       - 'src/**'
       - 'config/**'
