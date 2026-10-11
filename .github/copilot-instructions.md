@@ -55,9 +55,9 @@ review) still follow project rules.
 - Inline Blade compiled inside a method has its own scope and does not inherit the
   class's imports. `MediaPicker::toEmbeddedHtml()` resolves `$canUpload` in PHP and passes
   it into the markup; do not reference `MediaAccess` inside the markup itself.
-- CSS lives in `resources/css/basekit-laravel-media/*.css`, registered as a Filament asset by
-  the service provider. Never put a `<style>` block in a Blade view. Class names follow BEM
-  with `bkm` as prefix — `bkm-<block>`, `bkm-<block>__<element>`, `bkm-<block>--<modifier>` —
+- CSS sources live in `resources/css/src/` and are built with `npm run css:dist` into
+  `resources/css/dist/`; commit both. Never put a `<style>` block in a Blade view. Class names
+  follow BEM with `bkm` as prefix — `bkm-<block>`, `bkm-<block>__<element>`, `bkm-<block>--<modifier>` —
   and `bkm` alone is the prefix, never a block.
 - Moving a file between folders is metadata only. Never move or rename a stored blob as
   part of filing it, or published URLs break.

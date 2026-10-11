@@ -38,8 +38,8 @@ do not embed generic Laravel guidance here.
 - `resources/views/` — Blade views exposed under the `basekit-laravel-media` view namespace
   (`view('basekit-laravel-media::view-name')`), publishable with
   `--tag="basekit-laravel-media-views"`.
-- `resources/css/basekit-laravel-media/` — the stylesheets those views rely on, registered as
-  Filament assets and published with `php artisan filament:assets`.
+- `resources/css/` — `src/` holds the stylesheet sources and `dist/` the built files those views
+  rely on, registered as Filament assets and published with `php artisan filament:assets`.
 - `src/Filament/` — the optional Filament layer: `MediaPlugin` (registers the screen on a
   panel), `Pages/MediaLibrary` (the screen itself), `MediaPicker` (the embeddable field),
   `MediaTableConfiguration` (the table both share) and
@@ -71,6 +71,16 @@ PHP 8.4 using pcov. **Never lower the floor to make a build pass** — raise it 
 the measured baseline instead. Note that no coverage driver is installed by
 default in local environments, so this command only works where xdebug or pcov
 is available.
+
+### Stylesheets (PostCSS)
+
+```bash
+npm install       # once
+npm run css:dist  # build resources/css/src into resources/css/dist
+```
+
+Only `dist/` ships. CI rebuilds it and fails when it does not match `src/`, so run this before
+committing a stylesheet change.
 
 ### Code style (Laravel Pint)
 
@@ -200,11 +210,17 @@ Record-level abilities must pass the row, so a policy gets to answer for that ro
 
 ### Views and styling
 
-CSS lives in `resources/css/basekit-laravel-media/*.css` and is registered by
-`BasekitLaravelMediaServiceProvider::registerFilamentAssets()` as a Filament asset, which a
+CSS is written under `resources/css/src/` — one entry per asset, `@import`ing its partials — and
+built into `resources/css/dist/` with `npm run css:dist`. Only `dist/` ships, so **rebuild and
+commit it in the same change as the source**. The built files are registered by
+`BasekitLaravelMediaServiceProvider::registerFilamentAssets()` as Filament assets, which a
 consuming application publishes with `php artisan filament:assets`. **Never put a `<style>` block
 in a Blade view**: it opts that view out of the published stylesheet and has to be kept in step
 by hand. `tests/Unit/ViewConventionTest.php` enforces it.
+
+Colour and radius come from Filament's own custom properties — `--primary-*`, `--gray-*`,
+`--radius-*` — so a panel theme reaches the package. Keep literals to the fallbacks of those
+`var()` reads, never as the value a rule depends on.
 
 Class names follow BEM with `bkm` as the package prefix — `bkm-<block>` (`bkm-tile`),
 `bkm-<block>__<element>` (`bkm-tile__preview`), `bkm-<block>--<modifier>` (`bkm-folder--over`).

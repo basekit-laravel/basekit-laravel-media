@@ -189,7 +189,7 @@ php artisan vendor:publish --tag="basekit-laravel-media-translations"
 
 They land in `resources/views/vendor/basekit-laravel-media` and `lang/vendor/basekit-laravel-media`. The views render standalone and never assume your application's layout.
 
-The stylesheets are not part of that: they live in `resources/css/basekit-laravel-media/` and are registered as Filament assets, so a published view carries no CSS of its own.
+The stylesheets are not part of that: they are registered as Filament assets from `resources/css/dist/`, so a published view carries no CSS of its own.
 
 Class names follow BEM with `bkm` as the package prefix: `bkm-tile`, `bkm-tile__preview`, `bkm-folder--over`. `bkm` on its own is the prefix, never a block.
 
@@ -207,6 +207,9 @@ It does not provide:
 
 ```bash
 composer install
+
+npm install              # once, for the stylesheet build
+npm run css:dist         # build resources/css/dist from resources/css/src
 
 composer test            # Pest suite (Orchestra Testbench)
 composer test-coverage   # Pest with an HTML report in build/coverage
